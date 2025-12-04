@@ -1,0 +1,848 @@
+const getRandomInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+const shuffleArray = (array) => {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+};
+
+// --- Number Sense ---
+
+export const generatePlaceValueLarge = () => {
+    // Up to 10 Lakhs (7 digits)
+    const num = getRandomInt(100000, 9999999);
+    const numStr = String(num);
+
+    // Ensure we pick a non-zero digit to avoid duplicate 0 options
+    let pos = getRandomInt(0, numStr.length - 1);
+    while (numStr[pos] === '0') {
+        pos = getRandomInt(0, numStr.length - 1);
+    }
+
+    const digit = numStr[pos];
+    const power = numStr.length - 1 - pos;
+    const placeValue = Number(digit) * Math.pow(10, power);
+
+    // Determine place name (Indian System)
+    let placeName = "";
+    if (power === 0) placeName = "Ones";
+    else if (power === 1) placeName = "Tens";
+    else if (power === 2) placeName = "Hundreds";
+    else if (power === 3) placeName = "Thousands";
+    else if (power === 4) placeName = "Ten Thousands";
+    else if (power === 5) placeName = "Lakhs";
+    else if (power === 6) placeName = "Ten Lakhs";
+
+    const question = `What is the place value of the digit ${digit} in ${num}?`; // Simplified question
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Number Sense / Place Value",
+            answer: String(placeValue)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(placeValue), label: String(placeValue) },
+        { value: String(placeValue * 10), label: String(placeValue * 10) },
+        { value: String(placeValue / 10), label: String(placeValue / 10) }, // Assuming power > 0, if power=0 this might be float, handled below
+        { value: String(Number(digit) * Math.pow(10, (power + 2) % 7)), label: String(Number(digit) * Math.pow(10, (power + 2) % 7)) }
+    ]);
+
+    // Fix potential float or duplicate if power is small
+    if (power === 0) {
+        options[2] = { value: String(Number(digit) * 1000), label: String(Number(digit) * 1000) };
+    }
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Number Sense / Place Value",
+        options: options,
+        answer: String(placeValue)
+    };
+};
+
+export const generateExpandedForm = () => {
+    const num = getRandomInt(10000, 999999);
+    const numStr = String(num);
+    const parts = [];
+
+    for (let i = 0; i < numStr.length; i++) {
+        const digit = numStr[i];
+        if (digit !== '0') {
+            parts.push(`${digit}${'0'.repeat(numStr.length - 1 - i)}`);
+        }
+    }
+
+    const answer = parts.join(" + ");
+    const question = `Write the expanded form of ${num}.`;
+
+    // Distractors
+    const dist1 = parts.join(" + ").replace(/00/g, "0"); // Fewer zeros
+    const dist2 = parts.join(" - "); // Wrong operator
+
+    // Create a subtle wrong expanded form
+    const partsWrong = [...parts];
+    if (partsWrong.length > 1) {
+        partsWrong[partsWrong.length - 1] = partsWrong[partsWrong.length - 1] + "0";
+    }
+    const dist3 = partsWrong.join(" + ");
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: dist1, label: dist1 },
+        { value: dist3, label: dist3 },
+        { value: String(num), label: String(num) } // Just the number
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Number Sense / Expanded Form",
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateCompareLarge = () => {
+    const num1 = getRandomInt(100000, 999999);
+    let num2 = getRandomInt(100000, 999999);
+    while (num1 === num2) num2 = getRandomInt(100000, 999999);
+
+    const question = `Compare: ${num1} ? ${num2}`;
+    let answer;
+    if (num1 > num2) answer = ">";
+    else answer = "<";
+
+    const options = shuffleArray([
+        { value: ">", label: ">" },
+        { value: "<", label: "<" },
+        { value: "=", label: "=" },
+        { value: "None", label: "None" }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Number Sense / Comparison",
+        options: options,
+        answer: answer
+    };
+};
+
+// --- Operations ---
+
+export const generateAdditionLarge = () => {
+    const num1 = getRandomInt(10000, 99999);
+    const num2 = getRandomInt(10000, 99999);
+    const answer = num1 + num2;
+
+    const question = `Add: ${num1} + ${num2} = ?`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Operations / Addition",
+            answer: String(answer)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(answer), label: String(answer) },
+        { value: String(answer + 100), label: String(answer + 100) },
+        { value: String(answer - 100), label: String(answer - 100) },
+        { value: String(answer + 10), label: String(answer + 10) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Operations / Addition",
+        options: options,
+        answer: String(answer)
+    };
+};
+
+export const generateSubtractionLarge = () => {
+    const num1 = getRandomInt(50000, 99999);
+    const num2 = getRandomInt(10000, 49999);
+    const answer = num1 - num2;
+
+    const question = `Subtract: ${num1} - ${num2} = ?`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Operations / Subtraction",
+            answer: String(answer)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(answer), label: String(answer) },
+        { value: String(answer + 100), label: String(answer + 100) },
+        { value: String(answer - 100), label: String(answer - 100) },
+        { value: String(answer + 10), label: String(answer + 10) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Operations / Subtraction",
+        options: options,
+        answer: String(answer)
+    };
+};
+
+export const generateMultiplicationLarge = () => {
+    // 3-digit x 2-digit or 3-digit x 3-digit
+    const is3x3 = Math.random() > 0.5;
+    const num1 = getRandomInt(100, 999);
+    const num2 = is3x3 ? getRandomInt(100, 999) : getRandomInt(10, 99);
+
+    const answer = num1 * num2;
+    const question = `Multiply: ${num1} × ${num2} = ?`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Operations / Multiplication",
+            answer: String(answer)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(answer), label: String(answer) },
+        { value: String(answer + num2), label: String(answer + num2) }, // Forgot to carry?
+        { value: String(answer - num2), label: String(answer - num2) },
+        { value: String(answer + 100), label: String(answer + 100) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Operations / Multiplication",
+        options: options,
+        answer: String(answer)
+    };
+};
+
+export const generateDivisionLarge = () => {
+    // Divide by 1-digit or 2-digit
+    const is2DigitDivisor = Math.random() > 0.5;
+    const divisor = is2DigitDivisor ? getRandomInt(10, 25) : getRandomInt(2, 9);
+    const quotient = getRandomInt(50, 500);
+    const remainder = getRandomInt(0, divisor - 1);
+    const dividend = (divisor * quotient) + remainder;
+
+    const question = `Divide: ${dividend} ÷ ${divisor}`;
+    const answer = `Q: ${quotient}, R: ${remainder}`;
+
+    // Distractors
+    const dist1 = `Q: ${quotient + 1}, R: ${remainder}`;
+    const dist2 = `Q: ${quotient}, R: ${remainder + 1}`;
+    const dist3 = `Q: ${quotient - 1}, R: ${remainder}`;
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: dist1, label: dist1 },
+        { value: dist2, label: dist2 },
+        { value: dist3, label: dist3 }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Operations / Division",
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateEstimationOps = () => {
+    // Estimate Sum or Difference
+    const isSum = Math.random() > 0.5;
+    const num1 = getRandomInt(1000, 9000);
+    const num2 = getRandomInt(1000, 9000);
+
+    const r1 = Math.round(num1 / 1000) * 1000;
+    const r2 = Math.round(num2 / 1000) * 1000;
+
+    let val, opName;
+    if (isSum) {
+        val = r1 + r2;
+        opName = "sum";
+    } else {
+        // Ensure positive difference for simplicity
+        const big = Math.max(r1, r2);
+        const small = Math.min(r1, r2);
+        val = big - small;
+        opName = "difference";
+    }
+
+    const question = `Estimate the ${opName} of ${num1} and ${num2} by rounding to the nearest 1000.`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Operations / Estimation",
+            answer: String(val)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(val), label: String(val) },
+        { value: String(val + 1000), label: String(val + 1000) },
+        { value: String(val - 1000), label: String(val - 1000) },
+        { value: String(val + 500), label: String(val + 500) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Operations / Estimation",
+        options: options,
+        answer: String(val)
+    };
+};
+
+// --- Fractions ---
+
+export const generateEquivalentFractions = () => {
+    const num = getRandomInt(1, 5);
+    const den = getRandomInt(2, 6); // Base fraction
+    const mult = getRandomInt(2, 5); // Multiplier
+
+    const eqNum = num * mult;
+    const eqDen = den * mult;
+
+    const question = `Which fraction is equivalent to ${num}/${den}?`;
+    const answer = `${eqNum}/${eqDen}`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Fractions / Equivalent",
+            answer: answer
+        };
+    }
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: `${eqNum + 1}/${eqDen}`, label: `${eqNum + 1}/${eqDen}` },
+        { value: `${eqNum}/${eqDen + 1}`, label: `${eqNum}/${eqDen + 1}` },
+        { value: `${den}/${num}`, label: `${den}/${num}` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Fractions / Equivalent",
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateSimplifyFractions = () => {
+    let num = getRandomInt(2, 9);
+    let den = getRandomInt(num + 1, 12);
+
+    // Ensure coprime
+    const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+    while (gcd(num, den) !== 1) {
+        num = getRandomInt(2, 9);
+        den = getRandomInt(num + 1, 12);
+    }
+
+    const mult = getRandomInt(2, 5);
+
+    const bigNum = num * mult;
+    const bigDen = den * mult;
+
+    const question = `Reduce ${bigNum}/${bigDen} to its lowest terms.`;
+    const answer = `${num}/${den}`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Fractions / Simplify",
+            answer: answer
+        };
+    }
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: `${num + 1}/${den}`, label: `${num + 1}/${den}` },
+        { value: `${num}/${den - 1}`, label: `${num}/${den - 1}` },
+        { value: `${bigNum}/${bigDen}`, label: `${bigNum}/${bigDen}` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Fractions / Simplify",
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateAddUnlikeFractions = () => {
+    // Simple unlike fractions e.g. 1/2 + 1/3
+    const d1 = getRandomInt(2, 5);
+    let d2 = getRandomInt(2, 5);
+    while (d1 === d2) d2 = getRandomInt(2, 5);
+
+    const n1 = 1;
+    const n2 = 1;
+
+    const commonDen = d1 * d2;
+    const numSum = (n1 * d2) + (n2 * d1);
+
+    const question = `Add: ${n1}/${d1} + ${n2}/${d2} = ?`;
+    const answer = `${numSum}/${commonDen}`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Fractions / Addition",
+            answer: answer
+        };
+    }
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: `${n1 + n2}/${d1 + d2}`, label: `${n1 + n2}/${d1 + d2}` }, // Common mistake
+        { value: `${numSum + 1}/${commonDen}`, label: `${numSum + 1}/${commonDen}` },
+        { value: `${numSum}/${commonDen + 1}`, label: `${numSum}/${commonDen + 1}` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Fractions / Addition",
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateMixedImproper = () => {
+    const isMixedToImp = Math.random() > 0.5;
+    const whole = getRandomInt(1, 5);
+    const den = getRandomInt(2, 9);
+    const num = getRandomInt(1, den - 1);
+
+    const impNum = (whole * den) + num;
+
+    if (isMixedToImp) {
+        const question = `Convert ${whole} ${num}/${den} to an improper fraction.`;
+        const answer = `${impNum}/${den}`;
+        const options = shuffleArray([
+            { value: answer, label: answer },
+            { value: `${impNum + 1}/${den}`, label: `${impNum + 1}/${den}` },
+            { value: `${whole * num}/${den}`, label: `${whole * num}/${den}` },
+            { value: `${impNum}/${den + 1}`, label: `${impNum}/${den + 1}` }
+        ]);
+        return {
+            type: "mcq",
+            question: question,
+            topic: "Fractions / Conversion",
+            options: options,
+            answer: answer
+        };
+    } else {
+        const question = `Convert ${impNum}/${den} to a mixed fraction.`;
+        const answer = `${whole} ${num}/${den}`;
+        const options = shuffleArray([
+            { value: answer, label: answer },
+            { value: `${whole + 1} ${num}/${den}`, label: `${whole + 1} ${num}/${den}` },
+            { value: `${whole} ${num + 1}/${den}`, label: `${whole} ${num + 1}/${den}` },
+            { value: `${whole} ${num}/${den + 1}`, label: `${whole} ${num}/${den + 1}` }
+        ]);
+        return {
+            type: "mcq",
+            question: question,
+            topic: "Fractions / Conversion",
+            options: options,
+            answer: answer
+        };
+    }
+};
+
+// --- Decimals ---
+
+export const generateDecimalPlaceValue = () => {
+    const whole = getRandomInt(0, 9);
+    const tenth = getRandomInt(1, 9);
+    const hundredth = getRandomInt(1, 9);
+    const num = `${whole}.${tenth}${hundredth}`;
+
+    const isTenth = Math.random() > 0.5;
+    let digit, place, val;
+
+    if (isTenth) {
+        digit = tenth;
+        place = "tenths";
+        val = `0.${tenth}`;
+    } else {
+        digit = hundredth;
+        place = "hundredths";
+        val = `0.0${hundredth}`;
+    }
+
+    const question = `What is the place value of ${digit} in ${num}?`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Decimals / Place Value",
+            answer: val
+        };
+    }
+
+    const options = shuffleArray([
+        { value: val, label: val },
+        { value: String(digit), label: String(digit) },
+        { value: String(digit * 10), label: String(digit * 10) },
+        { value: isTenth ? `0.0${digit}` : `0.${digit}`, label: isTenth ? `0.0${digit}` : `0.${digit}` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Decimals / Place Value",
+        options: options,
+        answer: val
+    };
+};
+
+export const generateDecimalOps = () => {
+    const isAdd = Math.random() > 0.5;
+    const n1 = getRandomInt(1, 9) + (getRandomInt(1, 9) / 10);
+    const n2 = getRandomInt(1, 9) + (getRandomInt(1, 9) / 10);
+
+    let ans, question;
+    if (isAdd) {
+        ans = (n1 + n2).toFixed(1);
+        question = `Add: ${n1} + ${n2} = ?`;
+    } else {
+        const big = Math.max(n1, n2);
+        const small = Math.min(n1, n2);
+        ans = (big - small).toFixed(1);
+        question = `Subtract: ${big} - ${small} = ?`;
+    }
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Decimals / Operations",
+            answer: ans
+        };
+    }
+
+    const options = shuffleArray([
+        { value: ans, label: ans },
+        { value: (Number(ans) + 0.1).toFixed(1), label: (Number(ans) + 0.1).toFixed(1) },
+        { value: (Number(ans) - 0.1).toFixed(1), label: (Number(ans) - 0.1).toFixed(1) },
+        { value: (Number(ans) + 1).toFixed(1), label: (Number(ans) + 1).toFixed(1) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Decimals / Operations",
+        options: options,
+        answer: ans
+    };
+};
+
+// --- Measurement ---
+
+export const generateUnitConversion = () => {
+    // Length, Weight, Capacity
+    const types = ["Length", "Weight", "Capacity"];
+    const type = types[getRandomInt(0, 2)];
+    let question, answer;
+
+    if (type === "Length") {
+        const m = getRandomInt(2, 20);
+        question = `Convert ${m} m to cm.`;
+        answer = `${m * 100} cm`;
+    } else if (type === "Weight") {
+        const kg = getRandomInt(2, 10);
+        question = `Convert ${kg} kg to g.`;
+        answer = `${kg * 1000} g`;
+    } else {
+        const l = getRandomInt(2, 10);
+        question = `Convert ${l} L to mL.`;
+        answer = `${l * 1000} mL`;
+    }
+
+    const val = parseInt(answer);
+    const unit = answer.split(" ")[1];
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question + " (number only)",
+            topic: `Measurement / ${type}`,
+            answer: String(val)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: `${val / 10} ${unit}`, label: `${val / 10} ${unit}` },
+        { value: `${val * 10} ${unit}`, label: `${val * 10} ${unit}` },
+        { value: `${val + 100} ${unit}`, label: `${val + 100} ${unit}` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: `Measurement / ${type}`,
+        options: options,
+        answer: answer
+    };
+};
+
+export const generateTimeElapsed = () => {
+    const startHour = getRandomInt(1, 10);
+    const duration = getRandomInt(1, 5);
+    const endHour = startHour + duration;
+
+    const question = `If a movie starts at ${startHour}:00 PM and lasts for ${duration} hours, when does it end?`;
+    const answer = `${endHour}:00 PM`;
+
+    const options = shuffleArray([
+        { value: answer, label: answer },
+        { value: `${endHour + 1}:00 PM`, label: `${endHour + 1}:00 PM` },
+        { value: `${endHour - 1}:00 PM`, label: `${endHour - 1}:00 PM` },
+        { value: `${startHour + duration + 2}:00 PM`, label: `${startHour + duration + 2}:00 PM` }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Measurement / Time",
+        options: options,
+        answer: answer
+    };
+};
+
+// --- Geometry ---
+
+export const generateAngleTypes = () => {
+    const types = ["Acute", "Obtuse", "Right", "Straight", "Reflex"];
+    const type = types[getRandomInt(0, 4)];
+    let angle, question;
+
+    if (type === "Acute") angle = getRandomInt(10, 89);
+    else if (type === "Right") angle = 90;
+    else if (type === "Obtuse") angle = getRandomInt(91, 179);
+    else if (type === "Straight") angle = 180;
+    else angle = getRandomInt(181, 359);
+
+    question = `What type of angle is ${angle}°?`;
+
+    const options = shuffleArray([
+        { value: type, label: type },
+        { value: types[(types.indexOf(type) + 1) % 5], label: types[(types.indexOf(type) + 1) % 5] },
+        { value: types[(types.indexOf(type) + 2) % 5], label: types[(types.indexOf(type) + 2) % 5] },
+        { value: types[(types.indexOf(type) + 3) % 5], label: types[(types.indexOf(type) + 3) % 5] }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Geometry / Angles",
+        options: options,
+        answer: type
+    };
+};
+
+export const generateAreaPerimeterShapes = () => {
+    let side = getRandomInt(3, 12);
+    while (side === 4) side = getRandomInt(3, 12); // Avoid side 4 where Area = Perimeter
+    const isArea = Math.random() > 0.5;
+
+    if (isArea) {
+        const area = side * side;
+        const question = `Find the area of a square with side ${side} cm.`;
+        if (Math.random() > 0.5) {
+            return {
+                type: "userInput",
+                question: question,
+                topic: "Geometry / Area",
+                answer: String(area)
+            };
+        }
+
+        const options = shuffleArray([
+            { value: String(area), label: `${area} sq cm` },
+            { value: String(side * 4), label: `${side * 4} sq cm` }, // Perimeter distractor
+            { value: String(area + 10), label: `${area + 10} sq cm` },
+            { value: String(area * 2), label: `${area * 2} sq cm` }
+        ]);
+        return {
+            type: "mcq",
+            question: question,
+            topic: "Geometry / Area",
+            options: options,
+            answer: String(area)
+        };
+    } else {
+        const perimeter = side * 4;
+        const question = `Find the perimeter of a square with side ${side} cm.`;
+        if (Math.random() > 0.5) {
+            return {
+                type: "userInput",
+                question: question,
+                topic: "Geometry / Perimeter",
+                answer: String(perimeter)
+            };
+        }
+
+        const options = shuffleArray([
+            { value: String(perimeter), label: `${perimeter} cm` },
+            { value: String(side * side), label: `${side * side} cm` }, // Area distractor
+            { value: String(perimeter + 4), label: `${perimeter + 4} cm` },
+            { value: String(perimeter + 10), label: `${perimeter + 10} cm` }
+        ]);
+        return {
+            type: "mcq",
+            question: question,
+            topic: "Geometry / Perimeter",
+            options: options,
+            answer: String(perimeter)
+        };
+    }
+};
+
+// --- Data Handling ---
+
+export const generatePieChart = () => {
+    // Simple interpretation
+    const question = "In a pie chart representing 100 students, if 50% like Cricket, how many students like Cricket?";
+    const answer = "50";
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Data Handling / Pie Chart",
+            answer: answer
+        };
+    }
+
+    const options = shuffleArray([
+        { value: "50", label: "50" },
+        { value: "25", label: "25" },
+        { value: "100", label: "100" },
+        { value: "10", label: "10" }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Data Handling / Pie Chart",
+        options: options,
+        answer: answer
+    };
+};
+
+// --- Number Theory ---
+
+export const generateFactors = () => {
+    const num = getRandomInt(6, 20);
+    // Find factors
+    const factors = [];
+    for (let i = 1; i <= num; i++) {
+        if (num % i === 0) factors.push(i);
+    }
+
+    const question = `Which of these is a factor of ${num}?`;
+    const correct = factors[getRandomInt(0, factors.length - 1)];
+
+    // Generate distractors (non-factors)
+    const distractors = [];
+    while (distractors.length < 3) {
+        const d = getRandomInt(2, num + 5);
+        if (num % d !== 0 && d !== correct && !distractors.includes(d)) {
+            distractors.push(d);
+        }
+    }
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Number Theory / Factors",
+            answer: String(correct)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(correct), label: String(correct) },
+        { value: String(distractors[0]), label: String(distractors[0]) },
+        { value: String(distractors[1]), label: String(distractors[1]) },
+        { value: String(distractors[2]), label: String(distractors[2]) }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Number Theory / Factors",
+        options: options,
+        answer: String(correct)
+    };
+};
+
+export const generateHCF = () => {
+    // Simple HCF
+    const pairs = [[12, 18, 6], [10, 15, 5], [8, 12, 4], [20, 30, 10]];
+    const pair = pairs[getRandomInt(0, 3)];
+    const n1 = pair[0];
+    const n2 = pair[1];
+    const hcf = pair[2];
+
+    const question = `Find the HCF of ${n1} and ${n2}.`;
+
+    if (Math.random() > 0.5) {
+        return {
+            type: "userInput",
+            question: question,
+            topic: "Number Theory / HCF",
+            answer: String(hcf)
+        };
+    }
+
+    const options = shuffleArray([
+        { value: String(hcf), label: String(hcf) },
+        { value: String(hcf - 1), label: String(hcf - 1) },
+        { value: String(hcf * 2), label: String(hcf * 2) },
+        { value: "1", label: "1" }
+    ]);
+
+    return {
+        type: "mcq",
+        question: question,
+        topic: "Number Theory / HCF",
+        options: options,
+        answer: String(hcf)
+    };
+};
+

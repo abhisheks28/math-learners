@@ -1,0 +1,85 @@
+.modalPaper {
+    border-radius: 16px !important;
+    padding: 16px;
+}
+
+.modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.headerContent {
+    font-weight: 700;
+    font-size: 1.25rem;
+    color: #333;
+}
+
+.closeButton {
+    color: #666;
+}
+
+.modalContent {
+    padding-top: 24px !important;
+}
+
+.stepContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.stepDescription {
+    color: #666;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.inputGroup {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.inputIcon {
+    color: #666;
+    margin-top: 4px;
+}
+
+.prefix {
+    color: #666;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
+.actionButton {
+    background-color: #3c91f3ff !important;
+    color: white !important;
+    padding: 12px !important;
+    font-weight: 600 !important;
+    text-transform: none !important;
+    border-radius: 8px !important;
+    margin-top: 16px !important;
+}
+
+.actionButton:disabled {
+    background-color: #a0cbf8 !important;
+}
+
+.backButton {
+    text-transform: none !important;
+    color: #666 !important;
+    margin-top: 8px !important;
+}
+
+.formGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.textField fieldset {
+    border-radius: 8px;
+}

@@ -1,0 +1,87 @@
+.quizPageWrapper {
+    display: flex;
+    min-height: 100vh;
+    background: #f3f4f6;
+    padding: 1.5rem 2rem;
+    gap: 1.5rem;
+}
+
+.questionSection {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebarSection {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.timerSection {
+    position: sticky;
+    top: 1.5rem;
+}
+
+.paletteSection {
+    position: sticky;
+    top: calc(1.5rem + 120px);
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+}
+
+/* Tablet Design (1024px and below) */
+@media (max-width: 1024px) {
+    .quizPageWrapper {
+        flex-direction: column;
+        padding: 1rem 1.25rem;
+        gap: 1rem;
+    }
+
+    .sidebarSection {
+        width: 100%;
+        flex-direction: row;
+        gap: 1rem;
+        order: -1;
+    }
+
+    .timerSection,
+    .paletteSection {
+        position: relative;
+        top: 0;
+        flex: 1;
+        max-height: 300px;
+    }
+
+    .questionSection {
+        order: 1;
+    }
+}
+
+/* Mobile Design (768px and below) */
+@media (max-width: 768px) {
+    .quizPageWrapper {
+        padding: 0.75rem 0.75rem;
+        gap: 0.75rem;
+        min-height: 100dvh;
+    }
+
+    .sidebarSection {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .timerSection,
+    .paletteSection {
+        max-height: none;
+    }
+}
+
+/* Small Mobile (480px and below) */
+@media (max-width: 480px) {
+    .quizPageWrapper {
+        padding: 0.25rem;
+    }
+}

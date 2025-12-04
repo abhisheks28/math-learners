@@ -1,0 +1,252 @@
+.pageWrapper {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+.loadingContainer {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dashboardContainer {
+    max-width: 1200px;
+    margin: 100px auto 40px;
+    padding: 0 20px;
+    width: 100%;
+    flex: 1;
+}
+
+.profileSection {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    margin-bottom: 32px;
+}
+
+.profileHeader {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #3c91f3, #1a73e8);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(60, 145, 243, 0.3);
+}
+
+.profileInfo {
+    flex: 1;
+}
+
+.profileInfo h1 {
+    margin: 0 0 8px 0;
+    font-size: 1.75rem;
+    color: #1a1a1a;
+}
+
+.profileInfo p {
+    margin: 0;
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.childSelectorRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.childSelector {
+    min-width: 200px;
+}
+
+.addChildButton {
+    text-transform: none !important;
+}
+
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+    border-top: 1px solid #eee;
+    padding-top: 32px;
+}
+
+.statCard {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.statIcon {
+    color: #3c91f3;
+    width: 24px;
+    height: 24px;
+}
+
+.statCard h3 {
+    margin: 0 0 4px 0;
+    font-size: 0.9rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.statCard p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.reportsSection h2 {
+    margin-bottom: 24px;
+    color: #1a1a1a;
+}
+
+.loader {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 0;
+    color: #666;
+    gap: 8px;
+}
+
+.loaderText {
+    font-size: 0.9rem;
+}
+
+.reportCard {
+    border-radius: 12px !important;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05) !important;
+    transition: transform 0.2s;
+}
+
+.reportCardLoading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.reportCard:hover {
+    transform: translateY(-2px);
+}
+
+.reportContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px !important;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.reportInfo {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.reportIcon {
+    width: 48px;
+    height: 48px;
+    background: #e3f2fd;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1976d2;
+}
+
+.reportInfo h3 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    color: #1a1a1a;
+}
+
+.reportDate {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.reportScore {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.scoreBadge {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.emptyState {
+    text-align: center;
+    padding: 48px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.emptyState p {
+    color: #666;
+    margin: 16px 0 24px 0;
+    font-size: 1.1rem;
+}
+
+.startBtn {
+    background-color: #3c91f3ff !important;
+    text-transform: none !important;
+    padding: 10px 24px !important;
+    font-weight: 600 !important;
+}
+
+.logoutButton {
+    text-transform: none !important;
+}
+
+@media (max-width: 768px) {
+    .profileHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .childSelectorRow {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .reportContent {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .reportScore {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 16px;
+    }
+}

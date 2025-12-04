@@ -1,0 +1,71 @@
+import {
+    generateCounting,
+    generatePlaceValue,
+    generateExpandedForm,
+    generateComparison,
+    generateAscendingDescending,
+    generateNumberNames,
+    generateSkipCounting,
+    generateEvenOdd,
+    generateAddNoCarry,
+    generateAddWithCarry,
+    generateAddWordProblems,
+    generateSubNoBorrow,
+    generateSubWithBorrow,
+    generateSubWordProblems,
+    generateRepeatedAddition,
+    generateTables,
+    generateIdentifyMoney,
+    generateAddMoney,
+    generateSubMoney,
+    generateLength,
+    generateWeight,
+    generateCapacity,
+    generateTime,
+    generateShapes,
+    generatePatterns,
+    generateTally,
+    generatePictograph,
+    generateSequences,
+    generateMissingNumbers
+} from './grade2Generators.mjs';
+
+const generate = (generator, count = 10) => {
+    return Array.from({ length: count }, () => generator());
+};
+
+const Grade2Questions = {
+    q1: generate(generateCounting),
+    q2: generate(generatePlaceValue),
+    q3: generate(generateExpandedForm),
+    q4: generate(generateComparison),
+    q5: generate(generateAscendingDescending),
+    q6: generate(generateNumberNames),
+    q7: generate(() => generateSkipCounting(2)),
+    q8: generate(() => generateSkipCounting(5)),
+    q9: generate(() => generateSkipCounting(10)),
+    q10: generate(generateEvenOdd),
+    q11: generate(generateAddNoCarry),
+    q12: generate(generateAddWithCarry),
+    q13: generate(generateAddWordProblems),
+    q14: generate(generateSubNoBorrow),
+    q15: generate(generateSubWithBorrow),
+    q16: generate(generateSubWordProblems),
+    q17: generate(generateRepeatedAddition),
+    q18: generate(generateTables),
+    q19: generate(generateIdentifyMoney),
+    q20: generate(generateAddMoney),
+    q21: generate(generateSubMoney),
+    q22: generate(generateLength),
+    q23: generate(generateWeight),
+    q24: generate(generateCapacity),
+    q25: generate(generateTime),
+    q26: generate(generateShapes),
+    q27: generate(generatePatterns),
+    q28: generate(generateTally),
+    q29: generate(generatePictograph),
+    q30: generate(generateSequences),
+    q31: generate(generateMissingNumbers)
+};
+
+export default Grade2Questions;
