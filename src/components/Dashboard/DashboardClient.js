@@ -205,7 +205,6 @@ const DashboardClient = () => {
                                 <Button
                                     variant="outlined"
                                     onClick={handleOpenAddChild}
-                                    disabled={Object.keys(children).length >= 3}
                                     className={Styles.addChildButton}
                                 >
                                     Add Child

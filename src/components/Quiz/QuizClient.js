@@ -126,68 +126,18 @@ const QuizClient = () => {
             }
         }
 
-        let randomInt = getRandomInt(0, 9);
-        const question1 = gradeQuestionPaper.q1[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question2 = gradeQuestionPaper.q2[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question3 = gradeQuestionPaper.q3[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question4 = gradeQuestionPaper.q4[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question5 = gradeQuestionPaper.q5[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question6 = gradeQuestionPaper.q6[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question7 = gradeQuestionPaper.q7[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question8 = gradeQuestionPaper.q8[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question9 = gradeQuestionPaper.q9[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question10 = gradeQuestionPaper.q10[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question11 = gradeQuestionPaper.q11[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question12 = gradeQuestionPaper.q12[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question13 = gradeQuestionPaper.q13[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question14 = gradeQuestionPaper.q14[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question15 = gradeQuestionPaper.q15[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question16 = gradeQuestionPaper.q16[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question17 = gradeQuestionPaper.q17[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question18 = gradeQuestionPaper.q18[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question19 = gradeQuestionPaper.q19[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question20 = gradeQuestionPaper.q20[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question21 = gradeQuestionPaper.q21[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question22 = gradeQuestionPaper.q22[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question23 = gradeQuestionPaper.q23[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question24 = gradeQuestionPaper.q24[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question25 = gradeQuestionPaper.q25[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question26 = gradeQuestionPaper.q26[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question27 = gradeQuestionPaper.q27[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question28 = gradeQuestionPaper.q28[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question29 = gradeQuestionPaper.q29[randomInt];
-        randomInt = getRandomInt(0, 9);
-        const question30 = gradeQuestionPaper.q30[randomInt];
-
-        const generatedPaper = [question1, question2, question3, question4, question5, question6, question7, question8, question9, question10, question11, question12, question13, question14, question15, question16, question17, question18, question19, question20, question21, question22, question23, question24, question25, question26, question27, question28, question29, question30];
+        const generatedPaper = [];
+        // Dynamically generate questions based on available keys in gradeQuestionPaper
+        // We assume keys are q1, q2, q3, etc.
+        let qIndex = 1;
+        while (gradeQuestionPaper[`q${qIndex}`]) {
+            const questions = gradeQuestionPaper[`q${qIndex}`];
+            if (questions && questions.length > 0) {
+                const randomInt = getRandomInt(0, questions.length - 1);
+                generatedPaper.push(questions[randomInt]);
+            }
+            qIndex++;
+        }
         setQuestionPaper(generatedPaper);
         setQuizContext(state => ({ ...state, questionPaper: generatedPaper }));
 

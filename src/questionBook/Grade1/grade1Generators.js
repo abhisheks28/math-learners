@@ -36,10 +36,9 @@ export const generateCountForward = () => {
   ]);
 
   return {
-    type: "mcq",
+    type: "userInput",
     question: `What comes next: ${sequence.join(", ")}, ...?`,
     topic: "Number Sense / Counting",
-    options: options,
     answer: String(answer)
   };
 };
@@ -57,10 +56,9 @@ export const generateCountBackward = () => {
   ]);
 
   return {
-    type: "mcq",
+    type: "userInput",
     question: `Count backwards: </br> ${sequence.join(", ")}, ...?`,
     topic: "Number Sense / Counting",
-    options: options,
     answer: String(answer)
   };
 };
@@ -87,10 +85,9 @@ export const generateSkipCounting = (step) => {
   ]);
 
   return {
-    type: "mcq",
+    type: "userInput",
     question: `Skip count by ${step}s: ${sequence.join(", ")}, ...?`,
     topic: "Number Sense / Skip Counting",
-    options: options,
     answer: String(answer)
   };
 };
@@ -102,17 +99,22 @@ export const generatePlaceValue = () => {
 
   const answer = `${tens} tens and ${ones} ones`;
 
-  const options = shuffleArray([
-    { value: answer, label: answer },
-    { value: `${ones} tens and ${tens} ones`, label: `${ones} tens and ${tens} ones` },
-    { value: `${tens + 1} tens and ${ones} ones`, label: `${tens + 1} tens and ${ones} ones` },
-    { value: `${tens} tens and ${ones + 1} ones`, label: `${tens} tens and ${ones + 1} ones` }
-  ]);
+  const options = [
+    { value: answer, label: answer }
+  ];
 
-  // Handle duplicate if tens === ones
-  if (tens === ones) {
-    options[1] = { value: `${tens} tens and ${ones + 2} ones`, label: `${tens} tens and ${ones + 2} ones` };
+  while (options.length < 4) {
+    const t = getRandomInt(1, 9);
+    const o = getRandomInt(0, 9);
+    const val = `${t} tens and ${o} ones`;
+
+    // Check if this value is already in options
+    if (!options.some(opt => opt.value === val)) {
+      options.push({ value: val, label: val });
+    }
   }
+
+  shuffleArray(options);
 
   return {
     type: "mcq",

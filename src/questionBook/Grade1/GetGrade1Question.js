@@ -12,15 +12,12 @@ import {
     generateSubtractionWordProblems,
     generateIdentifyShapes,
     generateSpatial,
-    generateLengthComparison,
     generateWeightComparison,
     generateCapacityComparison,
     generateTimeBasics,
     generateDaysOfWeek,
     generateMoneyCounting,
-    generatePatterns,
-    generateTally,
-    generatePictureGraph
+    generatePatterns
 } from './grade1Generators.js';
 
 const generate = (generator, count = 10) => {
@@ -38,26 +35,21 @@ const Grade1Questions = {
     q8: generate(() => generateComparison('greatest')),
     q9: generate(generateEvenOdd),
     q10: generate(generateAdditionObjects),
-    q11: generate(generateAdditionObjects),
-    q12: generate(generateAdditionWordProblems),
-    q13: generate(generateSubtractionObjects),
-    q14: generate(generateSubtractionObjects),
-    q15: generate(generateSubtractionWordProblems),
-    q16: generate(generateIdentifyShapes),
-    q17: generate(generateIdentifyShapes),
-    q18: generate(generateSpatial),
-    q19: generate(generateSpatial),
-    q20: generate(generateLengthComparison),
-    q21: generate(generateWeightComparison),
-    q22: generate(generateCapacityComparison),
-    q23: generate(generateTimeBasics),
-    q24: generate(generateDaysOfWeek),
-    q25: generate(generateMoneyCounting),
-    q26: generate(generateMoneyCounting),
-    q27: generate(generatePatterns),
-    q28: generate(generatePatterns),
-    q29: generate(generateTally),
-    q30: generate(generatePictureGraph)
+    q11: generate(generateAdditionWordProblems),
+    q12: generate(generateSubtractionObjects),
+    q13: generate(generateSubtractionWordProblems),
+    q14: generate(generateIdentifyShapes),
+    q15: generate(generateSpatial),
+    q16: generate(generateWeightComparison),
+    q17: generate(generateCapacityComparison),
+    q18: generate(generateTimeBasics),
+    q19: generate(generateDaysOfWeek),
+    q20: generate(generateMoneyCounting),
+    q21: generate(generatePatterns),
+    q22: generate(() => generateComparison('smallest')),
+    q23: generate(generateAdditionObjects),
+    q24: generate(generateSubtractionObjects),
+    q25: generate(generateIdentifyShapes)
 };
 
 export default Grade1Questions;
