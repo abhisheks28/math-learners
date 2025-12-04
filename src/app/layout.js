@@ -26,7 +26,7 @@ export const metadata = {
     siteName: 'Skill Conquest',
     images: [
       {
-        url: '/logo.svg',
+        url: '/LearnersLogoTransparent.png',
         width: 800,
         height: 600,
         alt: 'Skill Conquest Logo',
@@ -39,7 +39,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: "Skill Conquest - National Mathematics Skills Proficiency Test",
     description: "Take the Math Skills Proficiency Test and discover your math mastery level. Personalized learning roadmaps and detailed reports.",
-    images: ['/logo.svg'],
+    images: ['/LearnersLogoTransparent.png'],
   },
 };
 
