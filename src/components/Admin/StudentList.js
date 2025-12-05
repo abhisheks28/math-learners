@@ -38,25 +38,34 @@ import {
     X,
     CheckCircle,
     XCircle,
-    AlertCircle
+    AlertCircle,
+    Trash2,
+    FileSpreadsheet
 } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, Legend } from 'recharts';
 import { useState, useMemo, useRef } from 'react';
+import * as XLSX from 'xlsx';
 
-const StudentList = ({ students }) => {
+const StudentList = ({ students, onDelete }) => {
     const theme = useTheme();
     const chartRef = useRef(null);
     const [selectedGrade, setSelectedGrade] = useState('All');
     const [minScore, setMinScore] = useState(0);
     const [open, setOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [studentToDelete, setStudentToDelete] = useState(null);
 
     // Get unique grades for filter dropdown
     const uniqueGrades = useMemo(() => {
         const grades = new Set(students.map(s => s.grade).filter(Boolean));
-        return Array.from(grades).sort();
+        return Array.from(grades).sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, '')) || 0;
+            const numB = parseInt(b.replace(/\D/g, '')) || 0;
+            return numA - numB;
+        });
     }, [students]);
 
     // Filter students
@@ -77,6 +86,43 @@ const StudentList = ({ students }) => {
     const handleClose = () => {
         setOpen(false);
         setSelectedStudent(null);
+    };
+
+    const handleDeleteClick = (student) => {
+        setStudentToDelete(student);
+        setDeleteConfirmOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (studentToDelete && onDelete) {
+            onDelete(studentToDelete.id);
+        }
+        setDeleteConfirmOpen(false);
+        setStudentToDelete(null);
+    };
+
+    const handleCancelDelete = () => {
+        setDeleteConfirmOpen(false);
+        setStudentToDelete(null);
+    };
+
+    const handleExportExcel = () => {
+        const dataToExport = filteredStudents.map(student => ({
+            Name: student.name,
+            Grade: student.grade,
+            PhoneNumber: student.phoneNumber,
+            Email: student.email || 'N/A',
+            Marks: (student.marks !== null && student.marks !== undefined) ? `${student.marks}%` : 'Not Attempted',
+            DateJoined: student.date ? new Date(student.date).toLocaleDateString() : 'N/A',
+            Status: (student.marks !== null && student.marks !== undefined)
+                ? (student.marks >= 40 ? "PASSED" : "FAILED")
+                : "NOT ATTEMPTED"
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+        XLSX.writeFile(workbook, "Student_List.xlsx");
     };
 
     const handleDownload = async () => {
@@ -232,10 +278,12 @@ const StudentList = ({ students }) => {
                 Student Details
             </Typography>
 
+
+
             {/* Filters */}
             <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
                 <Grid container spacing={3} alignItems="center">
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={3}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Filter by Grade</InputLabel>
                             <Select
@@ -250,7 +298,7 @@ const StudentList = ({ students }) => {
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid item xs={12} md={3}>
                         <Typography gutterBottom variant="body2" color="text.secondary">
                             Minimum Score: {minScore}%
                         </Typography>
@@ -262,10 +310,26 @@ const StudentList = ({ students }) => {
                             max={100}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
-                        <Typography variant="body2" color="text.secondary" align="right">
+                    <Grid item xs={12} md={3}>
+                        <Typography variant="body2" color="text.secondary" align="center">
                             Showing {filteredStudents.length} of {students.length} students
                         </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={3} sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<FileSpreadsheet size={20} />}
+                            onClick={handleExportExcel}
+                            sx={{
+                                background: 'linear-gradient(45deg, #2e7d32 30%, #4caf50 90%)',
+                                boxShadow: '0 3px 5px 2px rgba(46, 125, 50, .3)',
+                                color: 'white',
+                                width: '100%'
+                            }}
+                        >
+                            Export Excel
+                        </Button>
                     </Grid>
                 </Grid>
             </Paper>
@@ -317,6 +381,9 @@ const StudentList = ({ students }) => {
                                     <TableCell>
                                         <IconButton size="small" color="primary" onClick={() => handleView(student)}>
                                             <Eye size={20} />
+                                        </IconButton>
+                                        <IconButton size="small" color="error" onClick={() => handleDeleteClick(student)}>
+                                            <Trash2 size={20} />
                                         </IconButton>
                                     </TableCell>
                                 </TableRow>
@@ -467,6 +534,45 @@ const StudentList = ({ students }) => {
                                                     Result: {selectedStudent.marks >= 40 ? "PASSED" : "FAILED"}
                                                 </Typography>
                                             </Box>
+
+                                            {/* Feedback Section */}
+                                            <Box sx={{ mt: 3, width: '100%', p: 2, bgcolor: '#f8f9fa', borderRadius: 2, border: '1px solid #e0e0e0', textAlign: 'left' }}>
+                                                <Typography variant="subtitle2" color="text.secondary" gutterBottom fontWeight="bold">
+                                                    Detailed Feedback
+                                                </Typography>
+
+                                                {selectedStudent.topicFeedback ? (
+                                                    Object.entries(selectedStudent.topicFeedback).map(([topic, data]) => (
+                                                        <Box key={topic} sx={{ mb: 2, p: 1.5, bgcolor: 'white', borderRadius: 1, border: '1px solid #eee' }}>
+                                                            <Typography variant="subtitle2" fontWeight="bold" gutterBottom color="primary">
+                                                                {topic}
+                                                            </Typography>
+
+                                                            <Box sx={{ mb: 1 }}>
+                                                                <Typography variant="caption" color="success.main" fontWeight="bold" display="block">
+                                                                    What went well:
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {data.positiveFeedback}
+                                                                </Typography>
+                                                            </Box>
+
+                                                            <Box>
+                                                                <Typography variant="caption" color="error.main" fontWeight="bold" display="block">
+                                                                    Needs Improvement:
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary">
+                                                                    {data.improvementFeedback}
+                                                                </Typography>
+                                                            </Box>
+                                                        </Box>
+                                                    ))
+                                                ) : (
+                                                    <Typography variant="body2" color="text.primary" sx={{ fontStyle: 'italic' }}>
+                                                        "{selectedStudent.feedback}"
+                                                    </Typography>
+                                                )}
+                                            </Box>
                                         </Box>
                                     ) : (
                                         <Box sx={{ height: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', gap: 2 }}>
@@ -495,6 +601,24 @@ const StudentList = ({ students }) => {
                     >
                         Download Report
                     </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete Confirmation Dialog */}
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={handleCancelDelete}
+            >
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete the student <strong>{studentToDelete?.name}</strong>?
+                        This action cannot be undone.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCancelDelete} color="inherit">Cancel</Button>
+                    <Button onClick={handleConfirmDelete} color="error" variant="contained">Delete</Button>
                 </DialogActions>
             </Dialog>
         </Box>

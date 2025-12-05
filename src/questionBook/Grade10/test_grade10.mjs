@@ -31,7 +31,7 @@ const checkQuestion = (key, question, index) => {
         const optionValues = question.options.map(o => o.value);
         const uniqueValues = new Set(optionValues);
         if (uniqueValues.size !== question.options.length) {
-            console.error(`FAILURE: Duplicate options found in ${key} question ${index}:`, optionValues);
+            console.error(`FAILURE: Duplicate options found in ${key} question ${index}. Values:`, JSON.stringify(optionValues));
             errorCount++;
         }
 
@@ -39,6 +39,23 @@ const checkQuestion = (key, question, index) => {
         const answerInOptions = question.options.some(o => o.value === question.answer);
         if (!answerInOptions) {
             console.error(`FAILURE: Answer "${question.answer}" not found in options for ${key} question ${index}`);
+            errorCount++;
+        }
+    }
+
+    if (question.type === 'tableInput') {
+        if (!question.rows || !Array.isArray(question.rows)) {
+            console.error(`FAILURE: Missing or invalid rows in ${key} question ${index} (TableInput)`);
+            errorCount++;
+        }
+        try {
+            const ans = JSON.parse(question.answer);
+            if (typeof ans !== 'object') {
+                console.error(`FAILURE: Answer JSON is not an object in ${key} question ${index} (TableInput)`);
+                errorCount++;
+            }
+        } catch (e) {
+            console.error(`FAILURE: Answer is not valid JSON in ${key} question ${index} (TableInput)`);
             errorCount++;
         }
     }

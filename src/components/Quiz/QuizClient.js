@@ -2,6 +2,7 @@
 import TypeMCQ from "@/components/QuestionTypes/TypeMCQ/TypeMCQ.component";
 import Styles from "../../app/quiz/Quiz.module.css";
 import TypeUserInput from "@/components/QuestionTypes/TypeUserInput/TypeUserInput.component";
+import TypeTableInput from "@/components/QuestionTypes/TypeTableInput/TypeTableInput.component";
 import TypeTrueAndFalse from "@/components/QuestionTypes/TypeTrueAndFalse/TypeTrueAndFalse.component";
 import { useContext, useEffect, useState, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
@@ -398,6 +399,18 @@ const QuizClient = () => {
                             questionPaper={questionPaper}
                             activeQuestionIndex={activeQuestionIndex}
                             question={questionPaper[activeQuestionIndex].question}
+                            topic={questionPaper[activeQuestionIndex].topic}
+                            grade={quizContext.userDetails?.grade}
+                            timeTakeRef={timeTakeRef}
+                        /> : null
+                }
+                {
+                    questionPaper[activeQuestionIndex]?.type === "tableInput" ?
+                        <TypeTableInput
+                            onClick={handleNext}
+                            onAnswerChange={handleAnswerChange}
+                            questionPaper={questionPaper}
+                            activeQuestionIndex={activeQuestionIndex}
                             topic={questionPaper[activeQuestionIndex].topic}
                             grade={quizContext.userDetails?.grade}
                             timeTakeRef={timeTakeRef}

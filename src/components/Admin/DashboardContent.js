@@ -1,8 +1,8 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Box, Grid, Typography, CircularProgress, Container, Button, Stack } from '@mui/material';
-import { Users, CheckCircle, XCircle, FileText, LayoutDashboard, List } from 'lucide-react';
-import { ref, get } from 'firebase/database';
+import { Users, CheckCircle, XCircle, FileText, LayoutDashboard, List, Trophy } from 'lucide-react';
+import { ref, get, remove } from 'firebase/database';
 import { firebaseDatabase } from '@/backend/firebaseHandler';
 import StatCard from './StatCard';
 import { MarksBarChart, StudentsAreaChart } from './Charts';
@@ -10,10 +10,12 @@ import StudentList from './StudentList';
 
 const DashboardContent = ({ logoutAction }) => {
     const [view, setView] = useState('overview'); // 'overview' | 'students'
+    const [growthFilter, setGrowthFilter] = useState('month'); // 'day', 'month', 'year'
+    const [rawStudentDates, setRawStudentDates] = useState([]);
     const [stats, setStats] = useState({
         totalStudents: 0,
         totalPassed: 0,
-        totalFailed: 0,
+        totalPerfectScores: 0,
         totalReports: 0,
     });
     const [chartData, setChartData] = useState({
@@ -37,11 +39,12 @@ const DashboardContent = ({ logoutAction }) => {
                 let studentCount = 0;
                 let reportCount = 0;
                 let passedCount = 0;
-                let failedCount = 0;
+                let perfectScoreCount = 0;
 
                 const students = [];
                 const gradeMarks = {}; // { "Grade 5": { total: 0, count: 0 } }
-                const growthMap = {}; // { "2023-10": 5 }
+                const allDates = [];
+
 
                 if (registrationsSnapshot.exists()) {
                     const regs = registrationsSnapshot.val();
@@ -64,6 +67,7 @@ const DashboardContent = ({ logoutAction }) => {
                                 // Student List Data Preparation
                                 let latestMarks = null;
                                 let latestDate = null;
+                                let latest = {};
 
                                 // Find reports for this child using normalized key
                                 const reportKey = normalizedReports[normalizedPhoneKey];
@@ -108,7 +112,7 @@ const DashboardContent = ({ logoutAction }) => {
                                     allReports.sort((a, b) => b.timestamp - a.timestamp);
 
                                     if (allReports.length > 0) {
-                                        let latest = allReports[0];
+                                        latest = allReports[0];
 
                                         // Handle stringified feedback for latest report
                                         if (typeof latest.generalFeedbackStringified === 'string') {
@@ -146,7 +150,7 @@ const DashboardContent = ({ logoutAction }) => {
                                             }
 
                                             if (repAccuracy >= 40) passedCount++;
-                                            else failedCount++;
+                                            if (repAccuracy === 100) perfectScoreCount++;
 
                                             // Aggregate for Marks Chart
                                             const grade = child.grade || "Unknown";
@@ -164,13 +168,14 @@ const DashboardContent = ({ logoutAction }) => {
                                     email: child.email,
                                     marks: latestMarks,
                                     date: latestDate,
+                                    id: phoneKey, // Add ID for deletion
+                                    feedback: latest.generalFeedback || "No feedback available",
+                                    topicFeedback: latest.topicFeedback || null
                                 });
 
                                 // Aggregate for Growth Chart (using createdAt)
                                 if (child.createdAt) {
-                                    const date = new Date(child.createdAt);
-                                    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-                                    growthMap[monthKey] = (growthMap[monthKey] || 0) + 1;
+                                    allDates.push(new Date(child.createdAt));
                                 }
                             });
                         }
@@ -181,30 +186,25 @@ const DashboardContent = ({ logoutAction }) => {
                 const marksData = Object.entries(gradeMarks).map(([grade, data]) => ({
                     name: grade,
                     avg: Math.round(data.total / data.count)
-                })).sort((a, b) => a.name.localeCompare(b.name));
-
-                // Process Growth Data (Cumulative)
-                const sortedMonths = Object.keys(growthMap).sort();
-                let cumulative = 0;
-                const growthData = sortedMonths.map(month => {
-                    cumulative += growthMap[month];
-                    return {
-                        name: month,
-                        students: cumulative
-                    };
+                })).sort((a, b) => {
+                    const numA = parseInt(a.name.replace(/\D/g, '')) || 0;
+                    const numB = parseInt(b.name.replace(/\D/g, '')) || 0;
+                    return numA - numB;
                 });
+
+                setRawStudentDates(allDates);
 
                 setStats({
                     totalStudents: studentCount,
                     totalPassed: passedCount,
-                    totalFailed: failedCount,
+                    totalPerfectScores: perfectScoreCount,
                     totalReports: reportCount,
                 });
                 setStudentList(students);
-                setChartData({
-                    marksByGrade: marksData,
-                    studentGrowth: growthData
-                });
+                setChartData(prev => ({
+                    ...prev,
+                    marksByGrade: marksData
+                }));
 
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
@@ -215,6 +215,58 @@ const DashboardContent = ({ logoutAction }) => {
 
         fetchData();
     }, []);
+
+    // Effect to process growth data whenever filter or raw dates change
+    useEffect(() => {
+        if (rawStudentDates.length === 0) return;
+
+        const growthMap = {};
+
+        rawStudentDates.forEach(dateObj => {
+            let key;
+            if (growthFilter === 'day') {
+                key = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+            } else if (growthFilter === 'month') {
+                key = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`; // YYYY-MM
+            } else if (growthFilter === 'year') {
+                key = `${dateObj.getFullYear()}`; // YYYY
+            }
+            growthMap[key] = (growthMap[key] || 0) + 1;
+        });
+
+        const sortedKeys = Object.keys(growthMap).sort();
+        let cumulative = 0;
+        const growthData = sortedKeys.map(key => {
+            cumulative += growthMap[key];
+            return {
+                name: key,
+                students: cumulative
+            };
+        });
+
+        setChartData(prev => ({
+            ...prev,
+            studentGrowth: growthData
+        }));
+    }, [growthFilter, rawStudentDates]);
+
+    const handleDeleteStudent = async (studentId) => {
+        try {
+            // Remove from Firebase
+            const studentRef = ref(firebaseDatabase, `NMD_2025/Registrations/${studentId}`);
+            await remove(studentRef);
+
+            // Update local state
+            setStudentList(prevList => prevList.filter(student => student.id !== studentId));
+            setStats(prevStats => ({
+                ...prevStats,
+                totalStudents: prevStats.totalStudents - 1
+            }));
+        } catch (error) {
+            console.error("Error deleting student:", error);
+            alert("Failed to delete student. Please try again.");
+        }
+    };
 
     return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 8 }}>
@@ -272,7 +324,6 @@ const DashboardContent = ({ logoutAction }) => {
                                 value={stats.totalStudents}
                                 icon={<Users size={24} />}
                                 color="#2196f3"
-                                trend={0}
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -281,16 +332,14 @@ const DashboardContent = ({ logoutAction }) => {
                                 value={stats.totalPassed}
                                 icon={<CheckCircle size={24} />}
                                 color="#4caf50"
-                                trend={0}
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
                             <StatCard
-                                title="Total Failed"
-                                value={stats.totalFailed}
-                                icon={<XCircle size={24} />}
-                                color="#f44336"
-                                trend={0}
+                                title="100% Club"
+                                value={stats.totalPerfectScores}
+                                icon={<Trophy size={24} />}
+                                color="#FFD700"
                             />
                         </Grid>
                         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
@@ -299,7 +348,6 @@ const DashboardContent = ({ logoutAction }) => {
                                 value={stats.totalReports}
                                 icon={<FileText size={24} />}
                                 color="#ff9800"
-                                trend={0}
                             />
                         </Grid>
                     </Grid>
@@ -310,12 +358,16 @@ const DashboardContent = ({ logoutAction }) => {
                             <MarksBarChart data={chartData.marksByGrade} />
                         </Grid>
                         <Grid size={{ xs: 12, md: 6 }}>
-                            <StudentsAreaChart data={chartData.studentGrowth} />
+                            <StudentsAreaChart
+                                data={chartData.studentGrowth}
+                                filter={growthFilter}
+                                onFilterChange={setGrowthFilter}
+                            />
                         </Grid>
                     </Grid>
                 </>
             ) : (
-                <StudentList students={studentList} />
+                <StudentList students={studentList} onDelete={handleDeleteStudent} />
             )}
         </Container>
     );

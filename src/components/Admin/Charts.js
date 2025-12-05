@@ -38,12 +38,29 @@ export const MarksBarChart = ({ data }) => (
     </Card>
 );
 
-export const StudentsAreaChart = ({ data }) => (
+export const StudentsAreaChart = ({ data, filter, onFilterChange }) => (
     <Card sx={{ height: '100%', borderRadius: 4, boxShadow: '0 4px 20px 0 rgba(0,0,0,0.05)' }}>
         <CardContent>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-                Student Growth Trend
-            </Typography>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                <Typography variant="h6" fontWeight="bold">
+                    Student Growth Trend
+                </Typography>
+                <select
+                    value={filter}
+                    onChange={(e) => onFilterChange(e.target.value)}
+                    style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid #e0e0e0',
+                        fontSize: '14px',
+                        outline: 'none'
+                    }}
+                >
+                    <option value="day">Day</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                </select>
+            </Box>
             <Box sx={{ height: 300, width: '100%', minHeight: 300 }}>
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data}>

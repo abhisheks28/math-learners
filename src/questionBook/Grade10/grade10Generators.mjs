@@ -8,678 +8,939 @@ const shuffleArray = (array) => {
     return array;
 };
 
-// --- Real Numbers ---
+const formatOption = (val) => {
+    return { value: String(val), label: String(val) };
+};
 
-export const generateRealNumbers = () => {
-    // HCF/LCM or Prime Factorization
-    const type = Math.random() > 0.5 ? "HCF_LCM" : "PrimeFactor";
-    let question, answer;
+const ensureUnique = (correct, distractors) => {
+    const options = [correct];
+    const seen = new Set([correct.value]);
 
-    if (type === "HCF_LCM") {
-        const a = getRandomInt(2, 20);
-        const b = getRandomInt(2, 20);
-        const subType = Math.random() > 0.5 ? "HCF" : "LCM";
-
-        const gcd = (x, y) => !y ? x : gcd(y, x % y);
-        const lcm = (x, y) => (x * y) / gcd(x, y);
-
-        const val = subType === "HCF" ? gcd(a, b) : lcm(a, b);
-        question = `Find the ${subType} of $${a}$ and $${b}$.`;
-        answer = String(val);
-    } else {
-        // Prime Factorization of simple composite numbers
-        const primes = [2, 3, 5, 7];
-        const p1 = primes[getRandomInt(0, 3)];
-        const p2 = primes[getRandomInt(0, 3)];
-        const p3 = primes[getRandomInt(0, 2)]; // Keep numbers small
-        const num = p1 * p2 * p3;
-
-        question = `Express $${num}$ as a product of its prime factors.`;
-        // Sort factors for consistent answer string
-        const factors = [p1, p2, p3].sort((a, b) => a - b);
-        answer = factors.join(" × ");
-    }
-
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: answer.includes("×") ? answer.replace("2", "3") : String(Number(answer) + 1), label: answer.includes("×") ? answer.replace("2", "3") : String(Number(answer) + 1) },
-        { value: answer.includes("×") ? answer.replace("3", "5") : String(Number(answer) - 1), label: answer.includes("×") ? answer.replace("3", "5") : String(Number(answer) - 1) },
-        { value: answer.includes("×") ? answer + " × 2" : String(Number(answer) * 2), label: answer.includes("×") ? answer + " × 2" : String(Number(answer) * 2) }
-    ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
+    for (const opt of distractors) {
+        if (options.length >= 4) break;
         if (!seen.has(opt.value)) {
             seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(1, 100);
-        const val = String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
+            options.push(opt);
         }
     }
 
-    if (type === "HCF_LCM" && Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Real Numbers",
-            answer: answer
-        };
+    let safety = 0;
+    while (options.length < 4 && safety < 20) {
+        const val = options[0].value + " " + (safety + 1);
+        let newVal = val;
+        let newLabel = options[0].label;
+
+        const numVal = parseFloat(options[0].value);
+        if (!isNaN(numVal)) {
+            const jitter = numVal + (Math.random() > 0.5 ? 1 : -1) * (safety + 1);
+            newVal = String(jitter);
+            newLabel = String(jitter);
+        }
+
+        if (!seen.has(newVal)) {
+            seen.add(newVal);
+            options.push({ value: newVal, label: newLabel });
+        }
+        safety++;
     }
 
+    return shuffleArray(options).slice(0, 4);
+};
+
+const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+const lcm = (a, b) => (a * b) / gcd(a, b);
+
+// --- CAT01: Fundamental Operations on Natural and Whole Numbers ---
+export const generateNaturalWholeNumbers = () => {
+    const rows = [];
+    const a1 = getRandomInt(10, 99);
+    const b1 = getRandomInt(10, 99);
+    rows.push({ left: a1, op: '+', right: b1, answer: String(a1 + b1) });
+
+    const a2 = getRandomInt(100, 999);
+    const b2 = getRandomInt(10, 99);
+    const max2 = Math.max(a2, b2);
+    const min2 = Math.min(a2, b2);
+    rows.push({ left: max2, op: '-', right: min2, answer: String(max2 - min2) });
+
+    const a3 = getRandomInt(10, 20);
+    const b3 = getRandomInt(2, 9);
+    rows.push({ left: a3, op: '×', right: b3, answer: String(a3 * b3) });
+
+    const b4 = getRandomInt(2, 15);
+    const q4 = getRandomInt(10, 50);
+    const a4 = b4 * q4;
+    rows.push({ left: a4, op: '÷', right: b4, answer: String(q4) });
+
+    const answerObj = { 0: rows[0].answer, 1: rows[1].answer, 2: rows[2].answer, 3: rows[3].answer };
     return {
-        type: "mcq",
-        question: question,
-        topic: "Real Numbers",
-        options: uniqueOptions,
-        answer: answer
+        type: 'tableInput',
+        question: 'Solve the following operations:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Fundamental Operations on Natural and Whole Numbers'
     };
 };
 
-// --- Polynomials ---
+// --- CAT02: Fundamental Operations On Integers ---
+export const generateIntegers = () => {
+    const rows = [];
+    const a1 = -1 * getRandomInt(2, 20);
+    const b1 = -1 * getRandomInt(2, 20);
+    rows.push({ left: `(${a1})`, op: '+', right: `(${b1})`, answer: String(a1 + b1) });
 
-export const generatePolynomials = () => {
-    // Zeroes & Coefficients or Forming Quadratic Polynomial
-    const type = Math.random() > 0.5 ? "Relation" : "Forming";
-    let question, answer;
+    const a2 = -1 * getRandomInt(2, 20);
+    const b2 = -1 * getRandomInt(2, 20);
+    rows.push({ left: `(${a2})`, op: '-', right: `(${b2})`, answer: String(a2 - b2) });
 
-    if (type === "Relation") {
-        // Given ax^2 + bx + c, find sum or product of zeroes
-        const a = getRandomInt(1, 5);
-        const b = getRandomInt(1, 10);
-        const c = getRandomInt(1, 10);
-        const subType = Math.random() > 0.5 ? "Sum" : "Product";
+    const a3 = -1 * getRandomInt(2, 12);
+    const b3 = -1 * getRandomInt(2, 12);
+    rows.push({ left: `(${a3})`, op: '×', right: `(${b3})`, answer: String(a3 * b3) });
 
-        question = `Find the ${subType.toLowerCase()} of the zeroes of the polynomial $${a}x^{2} + ${b}x + ${c}$.`;
+    const b4 = getRandomInt(2, 10);
+    const q4 = -1 * getRandomInt(2, 12);
+    const a4 = b4 * q4;
+    rows.push({ left: `(${a4})`, op: '÷', right: `(${b4})`, answer: String(q4) });
 
-        let val;
-        if (subType === "Sum") val = -b / a; // alpha + beta = -b/a
-        else val = c / a; // alpha * beta = c/a
-
-        // Format to 2 decimal places if not integer
-        answer = Number.isInteger(val) ? String(val) : val.toFixed(2);
-    } else {
-        // Form quadratic polynomial given sum and product
-        const sum = getRandomInt(-5, 5);
-        const prod = getRandomInt(-5, 5);
-
-        question = `Find a quadratic polynomial whose sum and product of zeroes are $${sum}$ and $${prod}$ respectively.`;
-        // k(x^2 - (sum)x + prod)
-        const term2 = sum >= 0 ? `- ${sum}x` : `+ ${Math.abs(sum)}x`;
-        const term3 = prod >= 0 ? `+ ${prod}` : `- ${Math.abs(prod)}`;
-        answer = `$x^{2} ${term2} ${term3}$`;
-    }
-
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: answer.includes("x^{2}") ? answer.replace("-", "+").replace("+", "-") : String(Number(answer) + 1), label: answer.includes("x^{2}") ? answer.replace("-", "+").replace("+", "-") : String(Number(answer) + 1) },
-        { value: answer.includes("x^{2}") ? answer.replace("x^{2}", "2x^{2}") : String(Number(answer) - 1), label: answer.includes("x^{2}") ? answer.replace("x^{2}", "2x^{2}") : String(Number(answer) - 1) },
-        { value: answer.includes("x^{2}") ? `$x^{2} + ${getRandomInt(1, 5)}x + 1$` : String(Number(answer) * 2), label: answer.includes("x^{2}") ? `$x^{2} + ${getRandomInt(1, 5)}x + 1$` : String(Number(answer) * 2) }
-    ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(1, 20);
-        const val = answer.includes("x^{2}") ? `$x^{2} + ${r}x + ${r}$` : String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
-        }
-    }
-
-    if (type === "Relation" && Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Polynomials",
-            answer: answer
-        };
-    }
-
+    const answerObj = { 0: rows[0].answer, 1: rows[1].answer, 2: rows[2].answer, 3: rows[3].answer };
     return {
-        type: "mcq",
-        question: question,
-        topic: "Polynomials",
-        options: uniqueOptions,
-        answer: answer
+        type: 'tableInput',
+        question: 'Solve the following integer operations:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Fundamental Operations On Integers'
     };
 };
 
-// --- Linear Equations ---
+// --- CAT03: Fractions ---
+export const generateFractions = () => {
+    const rows = [];
+    const d1 = getRandomInt(2, 9);
+    const n1 = getRandomInt(1, d1 * 2);
+    const n2 = getRandomInt(1, d1 * 2);
+    const nAns1 = n1 + n2;
+    rows.push({
+        left: { n: n1, d: d1 }, op: '+', right: { n: n2, d: d1 },
+        answer: { num: String(nAns1), den: String(d1) }
+    });
 
-export const generateLinearEquations = () => {
-    // Solve pair of linear equations
-    // x + y = a, x - y = b => 2x = a+b => x = (a+b)/2
-    // Ensure integer solutions
+    const d2 = getRandomInt(2, 9);
+    const n3 = getRandomInt(5, 15);
+    const n4 = getRandomInt(1, 4);
+    const maxN = Math.max(n3, n4);
+    const minN = Math.min(n3, n4);
+    rows.push({
+        left: { n: maxN, d: d2 }, op: '-', right: { n: minN, d: d2 },
+        answer: { num: String(maxN - minN), den: String(d2) }
+    });
+
+    const n5 = getRandomInt(1, 4);
+    const d5 = getRandomInt(2, 5);
+    const n6 = getRandomInt(1, 4);
+    const d6 = getRandomInt(2, 5);
+    rows.push({
+        left: { n: n5, d: d5 }, op: '×', right: { n: n6, d: d6 },
+        answer: { num: String(n5 * n6), den: String(d5 * d6) }
+    });
+
+    const n7 = getRandomInt(1, 5);
+    const d7 = getRandomInt(2, 6);
+    const n8 = getRandomInt(1, 5);
+    const d8 = getRandomInt(2, 6);
+    rows.push({
+        left: { n: n7, d: d7 }, op: '÷', right: { n: n8, d: d8 },
+        answer: { num: String(n7 * d8), den: String(d7 * n8) }
+    });
+
+    const answerObj = { 0: rows[0].answer, 1: rows[1].answer, 2: rows[2].answer, 3: rows[3].answer };
+    return {
+        type: 'tableInput',
+        variant: 'fraction',
+        question: 'Solve the following fraction operations:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Fractions'
+    };
+};
+
+// --- CAT04: Fundamental operations on decimals ---
+export const generateDecimals = () => {
+    const rows = [];
+    const a1 = (getRandomInt(10, 99) / 100).toFixed(2);
+    const b1 = (getRandomInt(10, 99) / 10).toFixed(1);
+    const ans1 = (parseFloat(a1) + parseFloat(b1)).toFixed(2);
+    rows.push({ left: a1, op: '+', right: b1, answer: String(ans1) });
+
+    const a2 = (getRandomInt(50, 99) / 100).toFixed(2);
+    const b2 = (getRandomInt(10, 40) / 100).toFixed(2);
+    const ans2 = (parseFloat(a2) - parseFloat(b2)).toFixed(2);
+    rows.push({ left: a2, op: '-', right: b2, answer: String(ans2) });
+
+    const a3 = (getRandomInt(1, 9) / 10).toFixed(1);
+    const b3 = (getRandomInt(1, 9) / 10).toFixed(1);
+    const ans3 = (parseFloat(a3) * parseFloat(b3)).toFixed(2);
+    rows.push({ left: a3, op: '×', right: b3, answer: String(ans3) });
+
+    const divisor = getRandomInt(2, 9);
+    const quotient = getRandomInt(2, 9);
+    const dividendRaw = divisor * quotient;
+    const a4 = (dividendRaw / 10).toFixed(1);
+    const b4 = (divisor / 10).toFixed(1);
+    const ans4 = String(quotient);
+    rows.push({ left: a4, op: '÷', right: b4, answer: ans4 });
+
+    const answerObj = { 0: rows[0].answer, 1: rows[1].answer, 2: rows[2].answer, 3: rows[3].answer };
+    return {
+        type: 'tableInput',
+        question: 'Solve the following decimal operations:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Fundamental operations on decimals'
+    };
+};
+
+// --- CAT05: LCM ---
+export const generateLCM = () => {
+    const rows = [];
+
+    const a1 = getRandomInt(4, 15);
+    const b1 = getRandomInt(4, 15);
+    const val1 = lcm(a1, b1);
+    rows.push({ text: `Find the LCM of ${a1}, ${b1}`, answer: String(val1) });
+
+    const a2 = getRandomInt(12, 30);
+    const b2 = getRandomInt(12, 30);
+    const val2 = lcm(a2, b2);
+    rows.push({ text: `Find the LCM of ${a2}, ${b2}`, answer: String(val2) });
+
+    const a3 = getRandomInt(3, 10);
+    const b3 = getRandomInt(3, 10);
+    const c3 = getRandomInt(3, 10);
+    const val3 = lcm(a3, lcm(b3, c3));
+    rows.push({ text: `Find the LCM of ${a3}, ${b3}, ${c3}`, answer: String(val3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Find the Least Common Multiple (LCM) for the following numbers:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Least Common Multiple'
+    };
+};
+
+// --- CAT06: HCF ---
+export const generateHCF = () => {
+    const rows = [];
+
+    const a1 = getRandomInt(12, 40);
+    const b1 = getRandomInt(12, 40);
+    const val1 = gcd(a1, b1);
+    rows.push({ text: `Find the HCF of ${a1}, ${b1}`, answer: String(val1) });
+
+    const a2 = getRandomInt(20, 60);
+    const b2 = getRandomInt(20, 60);
+    const val2 = gcd(a2, b2);
+    rows.push({ text: `Find the HCF of ${a2}, ${b2}`, answer: String(val2) });
+
+    const factor = getRandomInt(2, 6);
+    const a3 = factor * getRandomInt(3, 8);
+    const b3 = factor * getRandomInt(3, 8);
+    const c3 = factor * getRandomInt(3, 8);
+    const val3 = gcd(a3, gcd(b3, c3));
+    rows.push({ text: `Find the HCF of ${a3}, ${b3}, ${c3}`, answer: String(val3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Find the Highest Common Factor (HCF) for the following numbers:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Highest Common Factor'
+    };
+};
+
+// --- CAT07: Ratio and Proportion ---
+export const generateRatioProportion = () => {
+    const rows = [];
+
+    // Q1: Direct ratio problem
+    const a1 = getRandomInt(2, 5);
+    const b1 = getRandomInt(2, 5);
+    const x1 = getRandomInt(5, 12);
+    const y1 = (b1 * x1) / a1;
+    // ensure integer answer
+    const adjX1 = (y1 % 1 === 0) ? x1 : x1 * a1;
+    const adjY1 = (b1 * adjX1) / a1;
+    rows.push({ text: `If ${a1}:${b1} :: ${adjX1}:x, find x`, answer: String(adjY1) });
+
+    // Q2: Word simple
+    const total = getRandomInt(20, 100);
+    // ensure total divisible by sum of parts
+    const ratioA = 2, ratioB = 3;
+    const adjTotal = Math.ceil(total / 5) * 5;
+    const shareB = (adjTotal / 5) * 3;
+    rows.push({ text: `Divide ${adjTotal} in ratio 2:3. Value of second part?`, answer: String(shareB) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Solve the following Ratio and Proportion problems:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Ratio and Proportion'
+    };
+};
+
+// --- CAT08: Square and Square Roots ---
+export const generateSquareRoots = () => {
+    const rows = [];
+
+    const n1 = getRandomInt(11, 30);
+    rows.push({ text: `Find the value of (${n1})²`, answer: String(n1 * n1) });
+
+    const n2 = getRandomInt(12, 30);
+    const sq2 = n2 * n2;
+    rows.push({ text: `Find the value of √${sq2}`, answer: String(n2) });
+
+    const n3 = getRandomInt(31, 50);
+    rows.push({ text: `Find the value of (${n3})²`, answer: String(n3 * n3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Evaluate the following Squares and Square Roots:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Square and Square Roots'
+    };
+};
+
+// --- CAT09: Cube and Cube Roots ---
+export const generateCubeRoots = () => {
+    const rows = [];
+
+    const n1 = getRandomInt((-10), (-3)); // Negative cube
+    rows.push({ text: `Find the value of (${n1})³`, answer: String(n1 * n1 * n1) });
+
+    const n2 = getRandomInt(4, 12);
+    const cb2 = n2 * n2 * n2;
+    rows.push({ text: `Find the value of ∛${cb2}`, answer: String(n2) });
+
+    const n3 = getRandomInt((-8), (-2));
+    const cb3 = n3 * n3 * n3;
+    rows.push({ text: `Find the value of ∛${cb3}`, answer: String(n3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Evaluate the following Cubes and Cube Roots:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Cube and Cube Roots'
+    };
+};
+
+// --- CAT10: Laws of Exponents ---
+export const generateExponents = () => {
+    // Mix of 3 types: a^m * a^n, (a^m)^n, a^(-n)
+    const type = getRandomInt(0, 2);
+    let question, answerStr, val;
+    const a = getRandomInt(2, 5);
+
+    if (type === 0) {
+        // a^m * a^n
+        const m = getRandomInt(2, 5);
+        const n = getRandomInt(2, 5);
+        question = `Simplify $${a}^{${m}} \\times ${a}^{${n}}$`;
+        answerStr = `$${a}^{${m + n}}$`;
+        val = m + n;
+    } else if (type === 1) {
+        // (a^m)^n
+        const m = getRandomInt(2, 4);
+        const n = getRandomInt(2, 3);
+        question = `Simplify $(${a}^{${m}})^{${n}}$`;
+        answerStr = `$${a}^{${m * n}}$`;
+        val = m * n;
+    } else {
+        // Negative exponent: Find value of (-a)^(-n) or similar
+        // Image shows (-2)^(-2) -> 1/4 = 0.25 (options: -4, 1/4, -1/4, 4)
+        const base = -1 * getRandomInt(2, 5);
+        const exp = -1 * getRandomInt(2, 3); // -2 or -3
+        question = `Find the value of $(${base})^{${exp}}$`;
+
+        // precise calculation
+        const realVal = Math.pow(base, exp);
+        // format as fraction if possible
+        const den = Math.pow(base, Math.abs(exp)); // e.g. (-2)^2 = 4, (-2)^3 = -8
+        // answer string "1/4" or "-1/8"
+        answerStr = (den > 0) ? `1/${den}` : `-1/${Math.abs(den)}`;
+
+        // Custom distractors for this type
+        const options = ensureUnique({ value: answerStr, label: answerStr }, [
+            { value: String(den), label: String(den) },          // 4
+            { value: String(-den), label: String(-den) },        // -4
+            { value: (den > 0) ? `-1/${den}` : `1/${Math.abs(den)}`, label: (den > 0) ? `-1/${den}` : `1/${Math.abs(den)}` } // wrong sign fraction
+        ]);
+        return { type: 'mcq', question, answer: answerStr, options, topic: 'Laws of Exponents' };
+    }
+
+    const options = ensureUnique(
+        { value: answerStr, label: answerStr },
+        [
+            { value: `$${a}^{${val + 1}}$`, label: `$${a}^{${val + 1}}$` },
+            { value: `$${a}^{${Math.abs(val - 1)}}$`, label: `$${a}^{${Math.abs(val - 1)}}$` },
+            { value: `$${a + 1}^{${val}}$`, label: `$${a + 1}^{${val}}$` },
+            { value: `$${a}^{${val + 2}}$`, label: `$${a}^{${val + 2}}$` }
+        ]
+    );
+    return { type: 'mcq', question, answer: answerStr, options, topic: 'Laws of Exponents' };
+};
+
+// --- CAT11: BODMAS ---
+export const generateBODMAS = () => {
+    // Convert to Table Input
+    const rows = [];
+
+    // Row 1: Simple mixed ops
+    const a1 = getRandomInt(2, 9);
+    const b1 = getRandomInt(2, 9);
+    const c1 = getRandomInt(2, 9);
+    // a + b * c
+    const ans1 = a1 + (b1 * c1);
+    rows.push({ text: `Evaluate: ${a1} + ${b1} × ${c1}`, answer: String(ans1) });
+
+    // Row 2: Brackets
+    const a2 = getRandomInt(2, 9);
+    const b2 = getRandomInt(2, 9);
+    const c2 = getRandomInt(2, 5);
+    // (a + b) * c
+    const ans2 = (a2 + b2) * c2;
+    rows.push({ text: `Evaluate: (${a2} + ${b2}) × ${c2}`, answer: String(ans2) });
+
+    // Row 3: Complex
+    // a + b x (c - d)
+    const a3 = getRandomInt(2, 10);
+    const b3 = getRandomInt(2, 5);
+    const c3 = getRandomInt(6, 12);
+    const d3 = getRandomInt(2, 5); // ensure c-d > 0
+    const ans3 = a3 + b3 * (c3 - d3);
+    rows.push({ text: `Evaluate: ${a3} + ${b3} × (${c3} - ${d3})`, answer: String(ans3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Solve using BODMAS rules:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'BODMAS'
+    };
+};
+
+// --- CAT12: Algebraic Aggregation ---
+export const generateAlgebraicAdditionSubtraction = () => {
+    // Keep as MCQ, but verify format matches image style (12x - 4y + 3z) + (-6x + 10y - 14z)
+    const a1 = getRandomInt(5, 15);
+    const b1 = getRandomInt(2, 9); // we'll make it negative in string
+    const c1 = getRandomInt(2, 9);
+
+    const a2 = -1 * getRandomInt(2, 9);
+    const b2 = getRandomInt(5, 15);
+    const c2 = -1 * getRandomInt(5, 15);
+
+    // Question: (a1 x - b1 y + c1 z) + (a2 x + b2 y + c2 z)
+    // Coeffs X: a1 + a2
+    const resX = a1 + a2;
+    // Coeffs Y: -b1 + b2
+    const resY = -b1 + b2;
+    // Coeffs Z: c1 + c2
+    const resZ = c1 + c2;
+
+    const question = `(${a1}x - ${b1}y + ${c1}z) + (${a2}x + ${b2}y ${c2}z)`;
+
+    const formatTerm = (n, v) => {
+        if (n === 0) return "";
+        const sign = n > 0 ? "+" : "-";
+        return `${sign}${Math.abs(n)}${v}`;
+    };
+    // First term doesn't need plus sign if positive
+    let ansStr = `${resX}x`;
+    ansStr += formatTerm(resY, 'y');
+    ansStr += formatTerm(resZ, 'z');
+
+    // distractors
+    // error 1: subtract instead of add somewhere
+    let d1 = `${resX}x` + formatTerm(resY - 2, 'y') + formatTerm(resZ, 'z');
+    let d2 = `${resX + 1}x` + formatTerm(resY, 'y') + formatTerm(resZ, 'z');
+    let d3 = `${resX}x` + formatTerm(resY, 'y') + formatTerm(resZ + 2, 'z');
+
+    const options = ensureUnique({ value: ansStr, label: ansStr }, [
+        { value: d1, label: d1 },
+        { value: d2, label: d2 },
+        { value: d3, label: d3 },
+        { value: `${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}`, label: `${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}` }
+    ]);
+
+    return { type: 'mcq', question, answer: ansStr, options, topic: 'Algebraic Aggregation' };
+};
+
+// --- CAT13: Algebraic Multiplication ---
+export const generateAlgebraicMultiplication = () => {
+    // Keep as MCQ (binomial product) (2x + 3y)(3x - 4y)
+    const a = getRandomInt(2, 5);
+    const b = getRandomInt(2, 5);
+    const c = getRandomInt(2, 5);
+    const d = getRandomInt(2, 5);
+
+    // (ax + by)(cx - dy)
+    // ac x^2 - ad xy + bc xy - bd y^2
+    // ac x^2 + (bc - ad) xy - bd y^2
+
+    const term1 = a * c;
+    const term2 = (b * c) - (a * d); // coeff of xy
+    const term3 = b * d; // since it is -d, last term is -bd y^2
+
+    const question = `(${a}x + ${b}y)(${c}x - ${d}y)`;
+
+    const term2Str = term2 >= 0 ? `+ ${term2}xy` : `- ${Math.abs(term2)}xy`;
+    const ansStr = `${term1}x^2 ${term2Str} - ${term3}y^2`;
+
+    // format option wrapper
+    const fo = (s) => ({ value: s, label: s });
+
+    const options = ensureUnique(fo(ansStr), [
+        fo(`${term1}x^2 - ${Math.abs(term2) + 2}xy - ${term3}y^2`),
+        fo(`${term1}x^2 ${term2Str} + ${term3}y^2`), // wrong last sign
+        fo(`${term1 + 1}x^2 ${term2Str} - ${term3}y^2`),
+        fo(`${term1}x^2 + ${Math.abs(term2) + 5}xy - ${term3}y^2`)
+    ]);
+
+    return { type: 'mcq', question, answer: ansStr, options, topic: 'Algebraic Multiplication' };
+};
+
+// --- CAT14: Algebraic Division ---
+export const generateAlgebraicDivision = () => {
+    // Convert to Table Input
+    // Format: (9x - 42) / (3x - 14) = 3
+    const rows = [];
+
+    // Q1: Constant factor
+    const k1 = getRandomInt(2, 5);
+    const a1 = getRandomInt(2, 5);
+    const b1 = getRandomInt(5, 20); // (ax - b)
+    // Numerator: k(ax - b) = k*a x - k*b
+    const num1 = `${k1 * a1}x - ${k1 * b1}`;
+    const den1 = `${a1}x - ${b1}`;
+    rows.push({ text: `Divide: (${num1}) ÷ (${den1})`, answer: String(k1) });
+
+    // Q2: Quadratic / Quadratic (2 common)
+    // (k(ax^2 + bx + c)) / (ax^2 + bx + c)
+    const k2 = getRandomInt(2, 4);
+    const a2 = getRandomInt(2, 5);
+    const b2 = getRandomInt(2, 5); // negative
+    const c2 = getRandomInt(2, 5);
+    // 14x^2 - 20x + 10 / 7x^2 - 10x + 5 (from image, k=2)
+    const num2 = `${k2 * a2}x^2 - ${k2 * b2}x + ${k2 * c2}`;
+    const den2 = `${a2}x^2 - ${b2}x + ${c2}`;
+    rows.push({ text: `Divide: (${num2}) ÷ (${den2})`, answer: String(k2) });
+
+    // Q3: Monomial division
+    // 63 p^4 m^2 n / 7 p^4 m^2 n = 9
+    const k3 = getRandomInt(3, 9);
+    const c3 = getRandomInt(3, 9);
+    const num3 = `${k3 * c3}p^4m^2n`;
+    const den3 = `${c3}p^4m^2n`;
+    rows.push({ text: `Divide: ${num3} ÷ ${den3}`, answer: String(k3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Solve the following Algebraic Divisions:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Algebraic Division'
+    };
+};
+
+// --- CAT15: Linear Eq 1 Var ---
+export const generateLinearEquationOneVar = () => {
+    // Convert to Table Input
+    // Format: 4x + 48 = 12 -> x = -9
+    const rows = [];
+
+    // Q1: ax + b = c
+    const x1 = getRandomInt(2, 9); // let's keep x positive or negative
+    const a1 = getRandomInt(2, 6);
+    const b1 = getRandomInt(10, 50);
+    // make lhs = c
+    const c1 = a1 * x1 + b1;
+    rows.push({ text: `Solve: ${a1}x + ${b1} = ${c1}`, answer: String(x1) });
+
+    // Q2: ax - b = c
+    const x2 = getRandomInt(2, 9);
+    const a2 = getRandomInt(2, 6);
+    const b2 = getRandomInt(5, 20);
+    const c2 = a2 * x2 - b2;
+    rows.push({ text: `Solve: ${a2}x - ${b2} = ${c2}`, answer: String(x2) });
+
+    // Q3: Slightly harder? 2x = x + k
+    // or variables on both sides? Image is simple 4x+48=12.
+    // Let's do variables on both sides: 5x = 3x + 10
+    const x3 = getRandomInt(2, 10);
+    const diff = getRandomInt(2, 5); // 2x
+    const rhs = diff * x3; // 10
+    // 5x = 3x + 10 -> (3+diff)x = 3x + rhs
+    rows.push({ text: `Solve: ${3 + diff}x = 3x + ${rhs}`, answer: String(x3) });
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Find the value of x for the following equations:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Linear Equations 1 Var'
+    };
+};
+
+// --- CAT16: Simultaneous Equations ---
+// --- CAT16: Simultaneous Equations ---
+export const generateSimultaneousEquations = () => {
+    // 5x - 4y = 81
+    // 7x + 4y = 27
+    const rows = [];
+
+    // Generate integer solution
     const x = getRandomInt(1, 10);
     const y = getRandomInt(1, 10);
 
-    const eq1_rhs = x + y;
-    const eq2_rhs = x - y;
+    // Eq 1: a1x + b1y = c1
+    const a1 = getRandomInt(2, 9);
+    const b1 = getRandomInt(2, 9);
+    // Randomize signs
+    const sign1 = Math.random() < 0.5 ? -1 : 1;
+    const c1 = a1 * x + (sign1 * b1) * y;
 
-    const question = `Solve for $x$ and $y$: <br/> $x + y = ${eq1_rhs}$ and $x - y = ${eq2_rhs}$`;
-    const answer = `x=${x}, y=${y}`;
+    // Eq 2: a2x + b2y = c2
+    const a2 = getRandomInt(2, 9);
+    const b2 = getRandomInt(2, 9);
+    // Ensure not parallel/identical lines
+    const sign2 = Math.random() < 0.5 ? -1 : 1;
+    const c2 = a2 * x + (sign2 * b2) * y;
 
-    const options = shuffleArray([
-        { value: answer, label: `$x=${x}, y=${y}$` },
-        { value: `x=${x + 1}, y=${y}`, label: `$x=${x + 1}, y=${y}$` },
-        { value: `x=${x}, y=${y + 1}`, label: `$x=${x}, y=${y + 1}$` },
-        { value: `x=${y}, y=${x}`, label: `$x=${y}, y=${x}$` }
-    ]);
+    const op1 = sign1 === -1 ? '-' : '+';
+    const op2 = sign2 === -1 ? '-' : '+';
 
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r1 = getRandomInt(1, 10);
-        const r2 = getRandomInt(1, 10);
-        const val = `x=${r1}, y=${r2}`;
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: `$x=${r1}, y=${r2}$` });
-        }
-    }
+    const eqText = `$$ \\begin{cases} ${a1}x ${op1} ${b1}y = ${c1} \\\\ ${a2}x ${op2} ${b2}y = ${c2} \\end{cases} $$`;
+
+    rows.push({ text: `x =`, answer: String(x) });
+    rows.push({ text: `y =`, answer: String(y) });
+
+    const answerObj = { 0: String(x), 1: String(y) };
 
     return {
-        type: "mcq",
-        question: question,
-        topic: "Linear Equations",
-        options: uniqueOptions,
-        answer: answer
+        type: 'tableInput',
+        question: `Solve Simultaneous Linear Equations in Two Variables: <br/> ${eqText}`,
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Simultaneous Equations'
     };
 };
 
-// --- Quadratic Equations ---
+// --- CAT17: Quadratic Equations ---
+export const generateQuadraticEquation = () => {
+    // x^2 - Sum x + Prod = 0
+    // Ask for Smaller Root and Larger Root
+    const rows = [];
 
-export const generateQuadraticEquations = () => {
-    // Roots or Discriminant
-    const type = Math.random() > 0.5 ? "Roots" : "Discriminant";
-    let question, answer;
+    // Roots
+    const r1 = getRandomInt(2, 9);
+    const r2 = getRandomInt(r1 + 1, 12); // r2 > r1
 
-    if (type === "Roots") {
-        // Find roots of x^2 - (a+b)x + ab = 0
-        const a = getRandomInt(1, 5);
-        const b = getRandomInt(1, 5);
-        const sum = a + b;
-        const prod = a * b;
+    // eq: x^2 - (r1+r2)x + r1*r2 = 0
+    const sum = r1 + r2;
+    const prod = r1 * r2;
+    const eq = `x^2 - ${sum}x + ${prod} = 0`;
 
-        question = `Find the roots of the quadratic equation: <br/> $x^{2} - ${sum}x + ${prod} = 0$`;
-        answer = `${a}, ${b}`;
+    // Display equation using MathJax
+    const eqText = `$$ ${eq} $$`;
+
+    rows.push({ text: `Smaller Root (x_1) =`, answer: String(r1) });
+    rows.push({ text: `Larger Root (x_2) =`, answer: String(r2) });
+
+
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: `Solve the following Quadratic Equation: <br/> ${eqText}`,
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Quadratic Equations'
+    };
+};
+
+// --- CAT18: Perimeter ---
+// --- CAT18: Perimeter ---
+export const generatePerimeter = () => {
+    const rows = [];
+    const shapeType = getRandomInt(1, 4); // 1: Circle, 2: Rectangle, 3: Square
+    let questionText = "";
+    let answer = "";
+
+    if (shapeType === 1) {
+        // Circle
+        const r = 7 * getRandomInt(1, 5); // divisible by 7
+        questionText = `Find the perimeter of circle with radius ${r} cm. (Take $\\pi = \\frac{22}{7}$)`;
+        answer = String(2 * (22 / 7) * r);
+    } else if (shapeType === 2) {
+        // Rectangle
+        const l = getRandomInt(5, 15);
+        const w = getRandomInt(2, 10);
+        questionText = `Find the perimeter of a rectangle with length ${l} cm and width ${w} cm.`;
+        answer = String(2 * (l + w));
     } else {
-        // Find discriminant D = b^2 - 4ac
-        const a = getRandomInt(1, 5);
-        const b = getRandomInt(5, 10);
-        const c = getRandomInt(1, 5);
-
-        question = `Find the discriminant of the quadratic equation: <br/> $${a}x^{2} + ${b}x + ${c} = 0$`;
-        const D = b * b - 4 * a * c;
-        answer = String(D);
+        // Square
+        const s = getRandomInt(4, 12);
+        questionText = `Find the perimeter of a square with side ${s} cm.`;
+        answer = String(4 * s);
     }
 
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: answer.includes(",") ? `${parseInt(answer.split(',')[0]) + 1}, ${answer.split(',')[1]}` : String(Number(answer) + 10), label: answer.includes(",") ? `${parseInt(answer.split(',')[0]) + 1}, ${answer.split(',')[1]}` : String(Number(answer) + 10) },
-        { value: answer.includes(",") ? `${answer.split(',')[0]}, ${parseInt(answer.split(',')[1]) + 1}` : String(Number(answer) - 10), label: answer.includes(",") ? `${answer.split(',')[0]}, ${parseInt(answer.split(',')[1]) + 1}` : String(Number(answer) - 10) },
-        { value: answer.includes(",") ? `${parseInt(answer.split(',')[0]) + 1}, ${parseInt(answer.split(',')[1]) + 1}` : String(Number(answer) * 2), label: answer.includes(",") ? `${parseInt(answer.split(',')[0]) + 1}, ${parseInt(answer.split(',')[1]) + 1}` : String(Number(answer) * 2) }
-    ]);
+    rows.push({ text: `Perimeter =`, unit: 'cm', answer: answer });
 
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(1, 20);
-        const val = answer.includes(",") ? `${r}, ${r + 1}` : String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
-        }
-    }
-
-    if (type === "Discriminant" && Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Quadratic Equations",
-            answer: answer
-        };
-    }
+    const answerObj = { 0: answer };
 
     return {
-        type: "mcq",
-        question: question,
-        topic: "Quadratic Equations",
-        options: uniqueOptions,
-        answer: answer
+        type: 'tableInput',
+        question: questionText,
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Perimeter of Plane Figures'
     };
 };
 
-// --- Arithmetic Progression ---
+// --- CAT19: Area ---
+// --- CAT19: Area ---
+export const generateArea = () => {
+    const rows = [];
 
-export const generateArithmeticProgression = () => {
-    // nth term or Sum of n terms
-    const type = Math.random() > 0.5 ? "NthTerm" : "Sum";
-    const a = getRandomInt(1, 10);
-    const d = getRandomInt(2, 5);
-    const n = getRandomInt(5, 15);
-    let question, answer;
+    // Logic: Triangle Area. Mixed Units.
+    // Area (A) in sq.cm. Base (b) in m. Find Height (h) in cm.
+    // A = 0.5 * (b_m * 100) * h_cm
+    // => h_cm = (2 * A) / (b_m * 100)
 
-    if (type === "NthTerm") {
-        // an = a + (n-1)d
-        const an = a + (n - 1) * d;
-        question = `Find the $${n}^{\\text{th}}$ term of the AP: $${a}, ${a + d}, ${a + 2 * d}, \\ldots$`;
-        answer = String(an);
-    } else {
-        // Sn = n/2 [2a + (n-1)d]
-        const Sn = (n / 2) * (2 * a + (n - 1) * d);
-        question = `Find the sum of the first $${n}$ terms of the AP: $${a}, ${a + d}, ${a + 2 * d}, \\ldots$`;
-        answer = String(Sn);
-    }
+    // Let's pick h_cm and b_cm first to ensure integers.
+    const h_cm = getRandomInt(10, 300);
+    // Picks b_cm from a set that converts nicely to meters (e.g. 4cm=0.04m, 20cm=0.2m, 50cm=0.5m)
+    const baseOptionsCm = [2, 4, 5, 8, 10, 20, 25, 40, 50, 80];
+    const b_cm = baseOptionsCm[getRandomInt(0, baseOptionsCm.length - 1)];
 
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: String(Number(answer) + d), label: String(Number(answer) + d) },
-        { value: String(Number(answer) - d), label: String(Number(answer) - d) },
-        { value: String(Number(answer) + 2 * d), label: String(Number(answer) + 2 * d) }
-    ]);
+    const b_m = b_cm / 100; // e.g. 0.04
+    const area = 0.5 * b_cm * h_cm; // in sq.cm
 
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(10, 100);
-        const val = String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
-        }
-    }
+    // Text: "If the area of \triangle ABC is {area} sq.cm and the base measure {b_m} m then the height is in cm"
+    // Use MathJax for triangle.
+    const questionText = `If the area of $\\triangle ABC$ is ${area} sq.cm and the base measure ${b_m} m then the height is in cm`;
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Arithmetic Progression",
-            answer: answer
-        };
-    }
+    rows.push({ text: `height =`, unit: 'cm', answer: String(h_cm) });
+
+    const answerObj = { 0: String(h_cm) };
 
     return {
-        type: "mcq",
-        question: question,
-        topic: "Arithmetic Progression",
-        options: uniqueOptions,
-        answer: answer
+        type: 'tableInput',
+        question: questionText,
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Area of Plane Figures'
     };
 };
 
-// --- Coordinate Geometry ---
+// --- CAT20: Cartesian Point ---
+// --- CAT20: Cartesian Point ---
+export const generateCartesianPoint = () => {
+    // Show table with Points (x,y) -> Select Box [Quadrant-1, Quadrant-2, Quadrant-3, Quadrant-4]
+    const rows = [];
+    const options = ['Quadrant-1', 'Quadrant-2', 'Quadrant-3', 'Quadrant-4'];
 
+    const getQuad = (x, y) => {
+        if (x > 0 && y > 0) return 'Quadrant-1';
+        if (x < 0 && y > 0) return 'Quadrant-2';
+        if (x < 0 && y < 0) return 'Quadrant-3';
+        if (x > 0 && y < 0) return 'Quadrant-4';
+        return 'Quadrant-1';
+    };
+
+    for (let i = 0; i < 4; i++) {
+        // Ensure non-zero coordinates to avoid axis ambiguity
+        let x = getRandomInt(1, 15);
+        let y = getRandomInt(1, 15);
+
+        // Randomize signs
+        if (Math.random() < 0.5) x *= -1;
+        if (Math.random() < 0.5) y *= -1;
+
+        rows.push({
+            text: `(${x}, ${y})`,
+            inputType: 'select',
+            options: options,
+            answer: getQuad(x, y)
+        });
+    }
+
+    const answerObj = {};
+    rows.forEach((r, i) => answerObj[i] = r.answer);
+
+    return {
+        type: 'tableInput',
+        question: 'Select the quadrant in which the following points are present:',
+        answer: JSON.stringify(answerObj),
+        rows: rows,
+        topic: 'Locating a point in a Cartesian Plane'
+    };
+};
+
+// --- CAT21: Coordinate Geometry ---
 export const generateCoordinateGeometry = () => {
-    // Distance or Midpoint
-    const type = Math.random() > 0.5 ? "Distance" : "Midpoint";
-    let question, answer;
-
-    if (type === "Distance") {
-        // Use Pythagorean triplets
-        const triplets = [[3, 4, 5], [6, 8, 10], [5, 12, 13]];
-        const [dx, dy, dist] = triplets[getRandomInt(0, triplets.length - 1)];
-
-        const x1 = getRandomInt(0, 5);
-        const y1 = getRandomInt(0, 5);
-        const x2 = x1 + dx;
-        const y2 = y1 + dy;
-
-        question = `Find the distance between $A(${x1}, ${y1})$ and $B(${x2}, ${y2})$.`;
-        answer = String(dist);
-    } else {
-        // Midpoint: ((x1+x2)/2, (y1+y2)/2)
-        // Ensure even sum for integer coordinates
-        const x1 = getRandomInt(0, 10);
-        const y1 = getRandomInt(0, 10);
-        const x2 = x1 + 2 * getRandomInt(1, 5);
-        const y2 = y1 + 2 * getRandomInt(1, 5);
-
-        const mx = (x1 + x2) / 2;
-        const my = (y1 + y2) / 2;
-
-        question = `Find the midpoint of the line segment joining $A(${x1}, ${y1})$ and $B(${x2}, ${y2})$.`;
-        answer = `(${mx}, ${my})`;
-    }
-
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: answer.includes("(") ? `(${parseInt(answer.split(',')[0].slice(1)) + 1}, ${answer.split(',')[1]}` : String(Number(answer) + 1), label: answer.includes("(") ? `(${parseInt(answer.split(',')[0].slice(1)) + 1}, ${answer.split(',')[1]}` : String(Number(answer) + 1) },
-        { value: answer.includes("(") ? `(${answer.split(',')[0].slice(1)}, ${parseInt(answer.split(',')[1]) + 1})` : String(Number(answer) - 1), label: answer.includes("(") ? `(${answer.split(',')[0].slice(1)}, ${parseInt(answer.split(',')[1]) + 1})` : String(Number(answer) - 1) },
-        { value: answer.includes("(") ? `(0, 0)` : String(Number(answer) * 2), label: answer.includes("(") ? `(0, 0)` : String(Number(answer) * 2) }
+    const x = [3, 6, 5, 8, 9][getRandomInt(0, 4)];
+    const y = [4, 8, 12, 15, 12][getRandomInt(0, 4)];
+    const dist = Math.sqrt(x * x + y * y).toFixed(2);
+    const answer = String(Number(dist) === parseInt(dist) ? parseInt(dist) : dist);
+    const options = ensureUnique(formatOption(answer), [
+        formatOption(parseInt(answer) + 1),
+        formatOption(parseInt(answer) - 1),
+        formatOption(parseInt(answer) + 2),
+        formatOption(parseInt(answer) + 5)
     ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(1, 20);
-        const val = answer.includes("(") ? `(${r}, ${r})` : String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
-        }
-    }
-
-    if (type === "Distance" && Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Coordinate Geometry",
-            answer: answer
-        };
-    }
-
-    return {
-        type: "mcq",
-        question: question,
-        topic: "Coordinate Geometry",
-        options: uniqueOptions,
-        answer: answer
-    };
+    return { type: 'mcq', question: `Find the distance of point (${x}, ${y}) from the origin.`, answer, options, topic: 'Coordinate Geometry' };
 };
 
-// --- Trigonometry ---
+// --- CAT22: Section Formula ---
+export const generateSectionFormula = () => {
+    const x1 = 2, y1 = 4;
+    const x2 = 6, y2 = 8;
+    const answer = `(4, 6)`;
+    const options = ensureUnique(formatOption(answer), [
+        formatOption(`(3, 5)`),
+        formatOption(`(5, 7)`),
+        formatOption(`(2, 4)`),
+        formatOption(`(1, 2)`)
+    ]);
+    return { type: 'mcq', question: `Find the midpoint of the line segment joining (${x1}, ${y1}) and (${x2}, ${y2}).`, answer, options, topic: 'Section Formula' };
+};
 
+// --- CAT23: Trigonometry ---
 export const generateTrigonometry = () => {
-    // Ratios or Identities
-    const type = Math.random() > 0.5 ? "Ratios" : "Identities";
-    let question, answer;
-
-    if (type === "Ratios") {
-        // Given sin A = 3/5, find cos A
-        const triplets = [[3, 4, 5], [5, 12, 13], [8, 15, 17]];
-        const [opp, adj, hyp] = triplets[getRandomInt(0, triplets.length - 1)];
-
-        question = `If $\\sin A = \\frac{${opp}}{${hyp}}$, find $\\cos A$.`;
-        answer = `$\\frac{${adj}}{${hyp}}$`;
-    } else {
-        // Identity: sin^2 + cos^2 = 1
-        const angle = getRandomInt(10, 80);
-        question = `Find the value of $\\sin^{2}${angle}^{\\circ} + \\cos^{2}${angle}^{\\circ}$.`;
-        answer = "1";
-    }
-
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: "0", label: "$0$" },
-        { value: "1/2", label: "$\\frac{1}{2}$" },
-        { value: "2", label: "$2$" }
+    const answer = "1";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("0"),
+        formatOption("1/2"),
+        formatOption("-1"),
+        formatOption("sqrt(3)/2")
     ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(2, 10);
-        const val = `1/${r}`;
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: `$\\frac{1}{${r}}$` });
-        }
-    }
-
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Trigonometry",
-            answer: answer.replace(/\$/g, '').replace(/\\frac\{(\d+)\}\{(\d+)\}/g, '$1/$2')
-        };
-    }
-
-    return {
-        type: "mcq",
-        question: question,
-        topic: "Trigonometry",
-        options: uniqueOptions,
-        answer: answer.replace(/\$/g, '').replace(/\\frac\{(\d+)\}\{(\d+)\}/g, '$1/$2')
-    };
+    return { type: 'mcq', question: "What is the value of $\\sin 90^\\circ$?", answer, options, topic: 'Trigonometry' };
 };
 
-// --- Mensuration ---
-
-export const generateMensuration = () => {
-    // Volume/SA of Cone, Sphere, Cylinder
-    const shape = ["Cone", "Sphere", "Cylinder"][getRandomInt(0, 2)];
-    let question, answer;
-    const r = getRandomInt(2, 7);
-    const h = getRandomInt(5, 10);
-
-    if (shape === "Cone") {
-        // Volume = 1/3 pi r^2 h
-        const vol = (1 / 3) * Math.PI * r * r * h;
-        question = `Find the volume of a cone with radius $${r}$ cm and height $${h}$ cm. (Use $\\pi = 3.14$)`;
-        answer = `${vol.toFixed(2)} cm³`;
-    } else if (shape === "Sphere") {
-        // Surface Area = 4 pi r^2
-        const sa = 4 * Math.PI * r * r;
-        question = `Find the surface area of a sphere with radius $${r}$ cm. (Use $\\pi = 3.14$)`;
-        answer = `${sa.toFixed(2)} cm²`;
-    } else {
-        // Cylinder Volume = pi r^2 h
-        const vol = Math.PI * r * r * h;
-        question = `Find the volume of a cylinder with radius $${r}$ cm and height $${h}$ cm. (Use $\\pi = 3.14$)`;
-        answer = `${vol.toFixed(2)} cm³`;
-    }
-
-    const val = parseFloat(answer.split(' ')[0]);
-    const unit = answer.split(' ')[1];
-
-    const options = shuffleArray([
-        { value: answer, label: `$${val.toFixed(2)}$ ${unit}` },
-        { value: `${(val + 10).toFixed(2)} ${unit}`, label: `$${(val + 10).toFixed(2)}$ ${unit}` },
-        { value: `${(val * 2).toFixed(2)} ${unit}`, label: `$${(val * 2).toFixed(2)}$ ${unit}` },
-        { value: `${(val / 2).toFixed(2)} ${unit}`, label: `$${(val / 2).toFixed(2)}$ ${unit}` }
+// --- CAT24: Trig Ratios ---
+export const generateTrigRatios = () => {
+    const answer = "1";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("0"),
+        formatOption("sqrt(3)"),
+        formatOption("1/sqrt(3)"),
+        formatOption("2")
     ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(10, 100);
-        const valStr = `${r.toFixed(2)} ${unit}`;
-        if (!seen.has(valStr)) {
-            seen.add(valStr);
-            uniqueOptions.push({ value: valStr, label: `$${r.toFixed(2)}$ ${unit}` });
-        }
-    }
-
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question + " (number only)",
-            topic: "Mensuration",
-            answer: String(val)
-        };
-    }
-
-    return {
-        type: "mcq",
-        question: question,
-        topic: "Mensuration",
-        options: uniqueOptions,
-        answer: answer
-    };
+    return { type: 'mcq', question: "Evaluate: $\\tan 45^\\circ$", answer, options, topic: 'Trig Ratios' };
 };
 
-// --- Statistics ---
-
-export const generateStatistics = () => {
-    // Empirical Relationship: Mode = 3Median - 2Mean
-    const mean = getRandomInt(10, 20);
-    const median = getRandomInt(10, 20);
-    const mode = 3 * median - 2 * mean;
-    let question, answer;
-
-    question = `If the Mean is $${mean}$ and Median is $${median}$, find the Mode using the empirical relationship.`;
-    answer = String(mode);
-
-    const options = shuffleArray([
-        { value: answer, label: answer },
-        { value: String(mode + 1), label: String(mode + 1) },
-        { value: String(mode - 1), label: String(mode - 1) },
-        { value: String(mode + 2), label: String(mode + 2) }
+// --- CAT25: Pythagoras ---
+export const generatePythagoras = () => {
+    const b = 3, h = 4;
+    const answer = "5";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("6"),
+        formatOption("7"),
+        formatOption("25"),
+        formatOption("4")
     ]);
-
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-    for (const opt of options) {
-        if (!seen.has(opt.value)) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(1, 50);
-        const val = String(r);
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: val });
-        }
-    }
-
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Statistics",
-            answer: answer
-        };
-    }
-
-    return {
-        type: "mcq",
-        question: question,
-        topic: "Statistics",
-        options: uniqueOptions,
-        answer: answer
-    };
+    return { type: 'mcq', question: `In a right-angled triangle, if base is ${b} and height is ${h}, find the hypotenuse.`, answer, options, topic: 'Pythagoras' };
 };
 
-// --- Probability ---
+// --- CAT26: Clocks ---
+export const generateClocks = () => {
+    const h = 3;
+    const answer = "90 degrees";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("180 degrees"),
+        formatOption("60 degrees"),
+        formatOption("45 degrees"),
+        formatOption("30 degrees")
+    ]);
+    return { type: 'mcq', question: `Find the angle between the hour and minute hands at ${h}:00.`, answer, options, topic: 'Clocks' };
+};
 
+// --- CAT27: Probability ---
 export const generateProbability = () => {
-    // Dice or Cards
-    const type = Math.random() > 0.5 ? "Dice" : "Cards";
-    let question, answer;
+    const answer = "1/2";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("1/4"),
+        formatOption("1"),
+        formatOption("0"),
+        formatOption("1/8")
+    ]);
+    return { type: 'mcq', question: "Probability of getting a head in a single coin toss?", answer, options, topic: 'Probability' };
+};
 
-    if (type === "Dice") {
-        question = "A die is thrown once. Find the probability of getting a prime number.";
-        answer = "1/2"; // 2, 3, 5 -> 3/6
-    } else {
-        question = "One card is drawn from a well-shuffled deck of $52$ cards. Find the probability of getting a King.";
-        answer = "1/13"; // 4/52
-    }
+// --- CAT28: Linear Eq Word Problem ---
+export const generateWordProblemLinearEq = () => {
+    const n = getRandomInt(1, 10);
+    const sum = n + (n + 1);
+    const answer = String(n);
+    const options = ensureUnique(formatOption(answer), [
+        formatOption(n + 1),
+        formatOption(n - 1),
+        formatOption(sum),
+        formatOption(n + 2)
+    ]);
+    return { type: 'mcq', question: `The sum of two consecutive integers is ${sum}. Find the smaller integer.`, answer, options, topic: 'Linear Eq Word Problem' };
+};
 
-    const allOptions = [
-        { value: answer, label: `$\\frac{${answer.split('/')[0]}}{${answer.split('/')[1]}}$` },
-        { value: "1/4", label: "$\\frac{1}{4}$" },
-        { value: "1/2", label: "$\\frac{1}{2}$" },
-        { value: "1/13", label: "$\\frac{1}{13}$" },
-        { value: "1/52", label: "$\\frac{1}{52}$" },
-        { value: "1/3", label: "$\\frac{1}{3}$" },
-        { value: "1/6", label: "$\\frac{1}{6}$" }
-    ];
+// --- CAT29: Word Problem ---
+export const generateWordProblem = () => {
+    const answer = "20%";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("10%"),
+        formatOption("25%"),
+        formatOption("15%"),
+        formatOption("30%")
+    ]);
+    return { type: 'mcq', question: `A book is bought for 100 and sold for 120. Find the profit percentage.`, answer, options, topic: 'General Word Problem' };
+};
 
-    // Ensure unique options
-    const uniqueOptions = [];
-    const seen = new Set();
-
-    // Always add answer first
-    seen.add(answer);
-    uniqueOptions.push({ value: answer, label: `$\\frac{${answer.split('/')[0]}}{${answer.split('/')[1]}}$` });
-
-    // Add distractors
-    for (const opt of shuffleArray(allOptions)) {
-        if (!seen.has(opt.value) && uniqueOptions.length < 4) {
-            seen.add(opt.value);
-            uniqueOptions.push(opt);
-        }
-    }
-
-    // Fill if still needed
-    while (uniqueOptions.length < 4) {
-        const r = getRandomInt(5, 10);
-        const val = `1/${r}`;
-        if (!seen.has(val)) {
-            seen.add(val);
-            uniqueOptions.push({ value: val, label: `$\\frac{1}{${r}}$` });
-        }
-    }
-
-    const finalOptions = shuffleArray(uniqueOptions);
-
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Probability",
-            answer: answer
-        };
-    }
-
-    return {
-        type: "mcq",
-        question: question,
-        topic: "Probability",
-        options: finalOptions,
-        answer: answer
-    };
+// --- CAT30: Miscellaneous ---
+export const generateMiscellaneous = () => {
+    const answer = "360";
+    const options = ensureUnique(formatOption(answer), [
+        formatOption("180"),
+        formatOption("90"),
+        formatOption("270"),
+        formatOption("100")
+    ]);
+    return { type: 'mcq', question: "How many degrees are there in a circle?", answer, options, topic: 'Miscellaneous' };
 };
