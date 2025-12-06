@@ -76,7 +76,8 @@ const QuizClient = () => {
 
         // If we already have a questionPaper in context (e.g. after refresh), reuse it
         if (quizContext.questionPaper && Array.isArray(quizContext.questionPaper) && quizContext.questionPaper.length > 0) {
-            setQuestionPaper(quizContext.questionPaper);
+            const clean = quizContext.questionPaper.filter(q => q);
+            setQuestionPaper(clean);
             return;
         }
 
@@ -139,8 +140,10 @@ const QuizClient = () => {
             }
             qIndex++;
         }
-        setQuestionPaper(generatedPaper);
-        setQuizContext(state => ({ ...state, questionPaper: generatedPaper }));
+        // Filter out any undefined questions to avoid crashes
+        const cleanPaper = generatedPaper.filter(q => q);
+        setQuestionPaper(cleanPaper);
+        setQuizContext(state => ({ ...state, questionPaper: cleanPaper }));
 
         try {
             if (typeof window !== "undefined" && quizContext.userDetails && questionPaper && questionPaper.length > 0) {

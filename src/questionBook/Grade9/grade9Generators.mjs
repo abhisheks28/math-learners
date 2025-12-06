@@ -125,7 +125,7 @@ export const generatePolynomialBasics = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,
@@ -267,7 +267,7 @@ export const generatePolynomialZeroes = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,
@@ -365,7 +365,7 @@ export const generateLinearEquationSolving = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,
@@ -449,7 +449,7 @@ export const generateCoordinateFormulas = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,
@@ -504,7 +504,7 @@ export const generateMensurationArea = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question + " (number only)",
@@ -567,7 +567,7 @@ export const generateMensurationVolume = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question + " (number only)",
@@ -638,7 +638,7 @@ export const generateStatistics = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,
@@ -701,7 +701,7 @@ export const generateProbability = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
+    if (Math.random() > 0.2) {
         return {
             type: "userInput",
             question: question,

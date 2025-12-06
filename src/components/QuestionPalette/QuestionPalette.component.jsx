@@ -27,6 +27,7 @@ const QuestionPalette = ({ questions, activeQuestionIndex, onSelect }) => {
 
             <div className={Styles.gridContainer} ref={gridRef}>
                 {questions.map((q, index) => {
+                    if (!q) return null;
                     const isCompleted = q.userAnswer !== null && q.userAnswer !== undefined && q.userAnswer !== "";
                     const isActive = index === activeQuestionIndex;
                     const isMarkedForReview = q.markedForReview || false;
