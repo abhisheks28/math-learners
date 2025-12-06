@@ -478,8 +478,6 @@ const QuizResultClient = () => {
                             <span className={Styles.userName}>{displayName}</span>
                             <span className={Styles.divider}>•</span>
                             <span>{displayGrade}</span>
-                            <span className={Styles.divider}>•</span>
-                            <span>{displayPhone}</span>
                         </div>
                         <h1 className={Styles.mainTitle}>Quiz Results</h1>
                         <p className={Styles.subtitle}>Math Skill Report – Number Series</p>

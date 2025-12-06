@@ -590,6 +590,17 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
                         <p className={Styles.stepDescription}>Select who is taking the test</p>
 
                         <div className={Styles.profileGrid}>
+                            {/* Add New Student Card */}
+                            <div
+                                className={`${Styles.profileCard} ${Styles.addProfileCard}`}
+                                onClick={() => setStep("REGISTER")}
+                            >
+                                <div className={Styles.addIconCircle}>
+                                    <Plus size={24} />
+                                </div>
+                                <div className={Styles.profileName}>Add Student</div>
+                            </div>
+
                             {Object.entries(userProfiles).map(([key, profile]) => (
                                 <div
                                     key={key}
@@ -603,17 +614,6 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
                                     <div className={Styles.profileGrade}>{profile.grade}</div>
                                 </div>
                             ))}
-
-                            {/* Add New Student Card */}
-                            <div
-                                className={`${Styles.profileCard} ${Styles.addProfileCard}`}
-                                onClick={() => setStep("REGISTER")}
-                            >
-                                <div className={Styles.addIconCircle}>
-                                    <Plus size={24} />
-                                </div>
-                                <div className={Styles.profileName}>Add Student</div>
-                            </div>
                         </div>
 
                         <Button
