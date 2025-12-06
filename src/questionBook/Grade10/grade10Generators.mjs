@@ -206,18 +206,18 @@ export const generateLCM = () => {
     const a1 = getRandomInt(4, 15);
     const b1 = getRandomInt(4, 15);
     const val1 = lcm(a1, b1);
-    rows.push({ text: `Find the LCM of ${a1}, ${b1}`, answer: String(val1) });
+    rows.push({ text: `Find the LCM of $${a1}, ${b1}$`, answer: String(val1) });
 
     const a2 = getRandomInt(12, 30);
     const b2 = getRandomInt(12, 30);
     const val2 = lcm(a2, b2);
-    rows.push({ text: `Find the LCM of ${a2}, ${b2}`, answer: String(val2) });
+    rows.push({ text: `Find the LCM of $${a2}, ${b2}$`, answer: String(val2) });
 
     const a3 = getRandomInt(3, 10);
     const b3 = getRandomInt(3, 10);
     const c3 = getRandomInt(3, 10);
     const val3 = lcm(a3, lcm(b3, c3));
-    rows.push({ text: `Find the LCM of ${a3}, ${b3}, ${c3}`, answer: String(val3) });
+    rows.push({ text: `Find the LCM of $${a3}, ${b3}, ${c3}$`, answer: String(val3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -238,19 +238,19 @@ export const generateHCF = () => {
     const a1 = getRandomInt(12, 40);
     const b1 = getRandomInt(12, 40);
     const val1 = gcd(a1, b1);
-    rows.push({ text: `Find the HCF of ${a1}, ${b1}`, answer: String(val1) });
+    rows.push({ text: `Find the HCF of $${a1}, ${b1}$`, answer: String(val1) });
 
     const a2 = getRandomInt(20, 60);
     const b2 = getRandomInt(20, 60);
     const val2 = gcd(a2, b2);
-    rows.push({ text: `Find the HCF of ${a2}, ${b2}`, answer: String(val2) });
+    rows.push({ text: `Find the HCF of $${a2}, ${b2}$`, answer: String(val2) });
 
     const factor = getRandomInt(2, 6);
     const a3 = factor * getRandomInt(3, 8);
     const b3 = factor * getRandomInt(3, 8);
     const c3 = factor * getRandomInt(3, 8);
     const val3 = gcd(a3, gcd(b3, c3));
-    rows.push({ text: `Find the HCF of ${a3}, ${b3}, ${c3}`, answer: String(val3) });
+    rows.push({ text: `Find the HCF of $${a3}, ${b3}, ${c3}$`, answer: String(val3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -276,7 +276,7 @@ export const generateRatioProportion = () => {
     // ensure integer answer
     const adjX1 = (y1 % 1 === 0) ? x1 : x1 * a1;
     const adjY1 = (b1 * adjX1) / a1;
-    rows.push({ text: `If ${a1}:${b1} :: ${adjX1}:x, find x`, answer: String(adjY1) });
+    rows.push({ text: `If $${a1}:${b1} :: ${adjX1}:x$, find $x$`, answer: String(adjY1) });
 
     // Q2: Word simple
     const total = getRandomInt(20, 100);
@@ -284,7 +284,7 @@ export const generateRatioProportion = () => {
     const ratioA = 2, ratioB = 3;
     const adjTotal = Math.ceil(total / 5) * 5;
     const shareB = (adjTotal / 5) * 3;
-    rows.push({ text: `Divide ${adjTotal} in ratio 2:3. Value of second part?`, answer: String(shareB) });
+    rows.push({ text: `Divide $${adjTotal}$ in ratio $2:3$. Value of second part?`, answer: String(shareB) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -303,14 +303,14 @@ export const generateSquareRoots = () => {
     const rows = [];
 
     const n1 = getRandomInt(11, 30);
-    rows.push({ text: `Find the value of (${n1})²`, answer: String(n1 * n1) });
+    rows.push({ text: `Find the value of $(${n1})^2$`, answer: String(n1 * n1) });
 
     const n2 = getRandomInt(12, 30);
     const sq2 = n2 * n2;
-    rows.push({ text: `Find the value of √${sq2}`, answer: String(n2) });
+    rows.push({ text: `Find the value of $\\sqrt{${sq2}}$`, answer: String(n2) });
 
     const n3 = getRandomInt(31, 50);
-    rows.push({ text: `Find the value of (${n3})²`, answer: String(n3 * n3) });
+    rows.push({ text: `Find the value of $(${n3})^2$`, answer: String(n3 * n3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -329,15 +329,15 @@ export const generateCubeRoots = () => {
     const rows = [];
 
     const n1 = getRandomInt((-10), (-3)); // Negative cube
-    rows.push({ text: `Find the value of (${n1})³`, answer: String(n1 * n1 * n1) });
+    rows.push({ text: `Find the value of $(${n1})^3$`, answer: String(n1 * n1 * n1) });
 
     const n2 = getRandomInt(4, 12);
     const cb2 = n2 * n2 * n2;
-    rows.push({ text: `Find the value of ∛${cb2}`, answer: String(n2) });
+    rows.push({ text: `Find the value of $\\sqrt[3]{${cb2}}$`, answer: String(n2) });
 
     const n3 = getRandomInt((-8), (-2));
     const cb3 = n3 * n3 * n3;
-    rows.push({ text: `Find the value of ∛${cb3}`, answer: String(n3) });
+    rows.push({ text: `Find the value of $\\sqrt[3]{${cb3}}$`, answer: String(n3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -384,13 +384,13 @@ export const generateExponents = () => {
         // format as fraction if possible
         const den = Math.pow(base, Math.abs(exp)); // e.g. (-2)^2 = 4, (-2)^3 = -8
         // answer string "1/4" or "-1/8"
-        answerStr = (den > 0) ? `1/${den}` : `-1/${Math.abs(den)}`;
+        answerStr = (den > 0) ? `$1/${den}$` : `$-1/${Math.abs(den)}$`;
 
         // Custom distractors for this type
         const options = ensureUnique({ value: answerStr, label: answerStr }, [
-            { value: String(den), label: String(den) },          // 4
-            { value: String(-den), label: String(-den) },        // -4
-            { value: (den > 0) ? `-1/${den}` : `1/${Math.abs(den)}`, label: (den > 0) ? `-1/${den}` : `1/${Math.abs(den)}` } // wrong sign fraction
+            { value: `$${den}$`, label: `$${den}$` },          // 4
+            { value: `$${-den}$`, label: `$${-den}$` },        // -4
+            { value: (den > 0) ? `$-1/${den}$` : `$1/${Math.abs(den)}$`, label: (den > 0) ? `$-1/${den}$` : `$1/${Math.abs(den)}$` } // wrong sign fraction
         ]);
         return { type: 'mcq', question, answer: answerStr, options, topic: 'Laws of Exponents' };
     }
@@ -418,7 +418,7 @@ export const generateBODMAS = () => {
     const c1 = getRandomInt(2, 9);
     // a + b * c
     const ans1 = a1 + (b1 * c1);
-    rows.push({ text: `Evaluate: ${a1} + ${b1} × ${c1}`, answer: String(ans1) });
+    rows.push({ text: `Evaluate: $${a1} + ${b1} \\times ${c1}$`, answer: String(ans1) });
 
     // Row 2: Brackets
     const a2 = getRandomInt(2, 9);
@@ -426,7 +426,7 @@ export const generateBODMAS = () => {
     const c2 = getRandomInt(2, 5);
     // (a + b) * c
     const ans2 = (a2 + b2) * c2;
-    rows.push({ text: `Evaluate: (${a2} + ${b2}) × ${c2}`, answer: String(ans2) });
+    rows.push({ text: `Evaluate: $(${a2} + ${b2}) \\times ${c2}$`, answer: String(ans2) });
 
     // Row 3: Complex
     // a + b x (c - d)
@@ -435,7 +435,7 @@ export const generateBODMAS = () => {
     const c3 = getRandomInt(6, 12);
     const d3 = getRandomInt(2, 5); // ensure c-d > 0
     const ans3 = a3 + b3 * (c3 - d3);
-    rows.push({ text: `Evaluate: ${a3} + ${b3} × (${c3} - ${d3})`, answer: String(ans3) });
+    rows.push({ text: `Evaluate: $${a3} + ${b3} \\times (${c3} - ${d3})$`, answer: String(ans3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -468,7 +468,7 @@ export const generateAlgebraicAdditionSubtraction = () => {
     // Coeffs Z: c1 + c2
     const resZ = c1 + c2;
 
-    const question = `(${a1}x - ${b1}y + ${c1}z) + (${a2}x + ${b2}y ${c2}z)`;
+    const question = `$(${a1}x - ${b1}y + ${c1}z) + (${a2}x + ${b2}y ${c2}z)$`;
 
     const formatTerm = (n, v) => {
         if (n === 0) return "";
@@ -486,14 +486,17 @@ export const generateAlgebraicAdditionSubtraction = () => {
     let d2 = `${resX + 1}x` + formatTerm(resY, 'y') + formatTerm(resZ, 'z');
     let d3 = `${resX}x` + formatTerm(resY, 'y') + formatTerm(resZ + 2, 'z');
 
-    const options = ensureUnique({ value: ansStr, label: ansStr }, [
-        { value: d1, label: d1 },
-        { value: d2, label: d2 },
-        { value: d3, label: d3 },
-        { value: `${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}`, label: `${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}` }
+    // Helper to wrap
+    const wrap = (s) => `$${s}$`;
+
+    const options = ensureUnique({ value: wrap(ansStr), label: wrap(ansStr) }, [
+        { value: wrap(d1), label: wrap(d1) },
+        { value: wrap(d2), label: wrap(d2) },
+        { value: wrap(d3), label: wrap(d3) },
+        { value: wrap(`${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}`), label: wrap(`${resX + 2}x${formatTerm(resY + 2, 'y')}${formatTerm(resZ + 2, 'z')}`) }
     ]);
 
-    return { type: 'mcq', question, answer: ansStr, options, topic: 'Algebraic Aggregation' };
+    return { type: 'mcq', question, answer: wrap(ansStr), options, topic: 'Algebraic Aggregation' };
 };
 
 // --- CAT13: Algebraic Multiplication ---
@@ -588,14 +591,14 @@ export const generateLinearEquationOneVar = () => {
     const b1 = getRandomInt(10, 50);
     // make lhs = c
     const c1 = a1 * x1 + b1;
-    rows.push({ text: `Solve: ${a1}x + ${b1} = ${c1}`, answer: String(x1) });
+    rows.push({ text: `Solve: $${a1}x + ${b1} = ${c1}$`, answer: String(x1) });
 
     // Q2: ax - b = c
     const x2 = getRandomInt(2, 9);
     const a2 = getRandomInt(2, 6);
     const b2 = getRandomInt(5, 20);
     const c2 = a2 * x2 - b2;
-    rows.push({ text: `Solve: ${a2}x - ${b2} = ${c2}`, answer: String(x2) });
+    rows.push({ text: `Solve: $${a2}x - ${b2} = ${c2}$`, answer: String(x2) });
 
     // Q3: Slightly harder? 2x = x + k
     // or variables on both sides? Image is simple 4x+48=12.
@@ -604,7 +607,7 @@ export const generateLinearEquationOneVar = () => {
     const diff = getRandomInt(2, 5); // 2x
     const rhs = diff * x3; // 10
     // 5x = 3x + 10 -> (3+diff)x = 3x + rhs
-    rows.push({ text: `Solve: ${3 + diff}x = 3x + ${rhs}`, answer: String(x3) });
+    rows.push({ text: `Solve: $${3 + diff}x = 3x + ${rhs}$`, answer: String(x3) });
 
     const answerObj = {};
     rows.forEach((r, i) => answerObj[i] = r.answer);
@@ -680,8 +683,8 @@ export const generateQuadraticEquation = () => {
     // Display equation using MathJax
     const eqText = `$$ ${eq} $$`;
 
-    rows.push({ text: `Smaller Root (x_1) =`, answer: String(r1) });
-    rows.push({ text: `Larger Root (x_2) =`, answer: String(r2) });
+    rows.push({ text: `Smaller Root $(x_1) =$`, answer: String(r1) });
+    rows.push({ text: `Larger Root $(x_2) =$`, answer: String(r2) });
 
 
 
@@ -708,18 +711,18 @@ export const generatePerimeter = () => {
     if (shapeType === 1) {
         // Circle
         const r = 7 * getRandomInt(1, 5); // divisible by 7
-        questionText = `Find the perimeter of circle with radius ${r} cm. (Take $\\pi = \\frac{22}{7}$)`;
+        questionText = `Find the perimeter of circle with radius $${r}$ cm. (Take $\\pi = \\frac{22}{7}$)`;
         answer = String(2 * (22 / 7) * r);
     } else if (shapeType === 2) {
         // Rectangle
         const l = getRandomInt(5, 15);
         const w = getRandomInt(2, 10);
-        questionText = `Find the perimeter of a rectangle with length ${l} cm and width ${w} cm.`;
+        questionText = `Find the perimeter of a rectangle with length $${l}$ cm and width $${w}$ cm.`;
         answer = String(2 * (l + w));
     } else {
         // Square
         const s = getRandomInt(4, 12);
-        questionText = `Find the perimeter of a square with side ${s} cm.`;
+        questionText = `Find the perimeter of a square with side $${s}$ cm.`;
         answer = String(4 * s);
     }
 
@@ -757,7 +760,7 @@ export const generateArea = () => {
 
     // Text: "If the area of \triangle ABC is {area} sq.cm and the base measure {b_m} m then the height is in cm"
     // Use MathJax for triangle.
-    const questionText = `If the area of $\\triangle ABC$ is ${area} sq.cm and the base measure ${b_m} m then the height is in cm`;
+    const questionText = `If the area of $\\triangle ABC$ is $${area}$ sq.cm and the base measure $${b_m}$ m then find the height in cm.`;
 
     rows.push({ text: `height =`, unit: 'cm', answer: String(h_cm) });
 
@@ -797,7 +800,7 @@ export const generateCartesianPoint = () => {
         if (Math.random() < 0.5) y *= -1;
 
         rows.push({
-            text: `(${x}, ${y})`,
+            text: `$(${x}, ${y})$`,
             inputType: 'select',
             options: options,
             answer: getQuad(x, y)
@@ -943,10 +946,10 @@ export const generateTrigonometry = () => {
     // Find CosA(adj/hyp), TanA(opp/adj), SecA(hyp/adj), CotA(adj/opp)
 
     const ratios = [
-        { label: 'CosA', val: { n: adj, d: hyp } },
-        { label: 'TanA', val: { n: opp, d: adj } },
-        { label: 'SecA', val: { n: hyp, d: adj } },
-        { label: 'CotA', val: { n: adj, d: opp } }
+        { label: '\\cos A', val: { n: adj, d: hyp } },
+        { label: '\\tan A', val: { n: opp, d: adj } },
+        { label: '\\sec A', val: { n: hyp, d: adj } },
+        { label: '\\cot A', val: { n: adj, d: opp } }
     ];
 
     // Convert to rows. "text" is label (e.g. CosA = ).
@@ -983,7 +986,7 @@ export const generateTrigonometry = () => {
             // renderInputCell checks variant. If 'fraction', renders fraction inputs.
             // Perfect.
 
-            text: `${r.label} =`,
+            text: `$${r.label} =$`,
             answer: JSON.stringify({ num: String(r.val.n), den: String(r.val.d) })
         });
         answerObj[idx] = { num: String(r.val.n), den: String(r.val.d) };
@@ -1021,7 +1024,8 @@ export const generateTrigRatios = () => {
         const funcs = Object.keys(item.values);
         const func = funcs[getRandomInt(0, funcs.length - 1)];
         const val = item.values[func];
-        const funcDisp = func.charAt(0).toUpperCase() + func.slice(1);
+        // Display function name in latex
+        const funcDisp = '\\' + func;
 
         rows.push({
             text: `$${funcDisp}(${item.angle}) =$`,
@@ -1051,8 +1055,8 @@ export const generatePythagoras = () => {
     const hyp_val = hyp * k;
     const b_val = base * k;
 
-    const questionText = `If a flag pole of height ${h_val}meters is erected with the help of a thread of length ${hyp_val}meters then what is the distance between base of the thread to base of pole in meters ? <br/> <img src="/assets/grade10/pyth.png" alt="Pythagoras Diagram" style="width: 80%; max-width: 300px; margin: 10px auto; display: block;" />`;
-    rows.push({ text: `d =`, unit: 'm', answer: String(b_val) });
+    const questionText = `If a flag pole of height $${h_val}$ meters is erected with the help of a thread of length $${hyp_val}$ meters then what is the distance between base of the thread to base of pole in meters ? <br/> <img src="/assets/grade10/pyth.png" alt="Pythagoras Diagram" style="width: 80%; max-width: 300px; margin: 10px auto; display: block;" />`;
+    rows.push({ text: `$d =$`, unit: 'm', answer: String(b_val) });
     const answerObj = { 0: String(b_val) };
 
     return {
@@ -1078,9 +1082,9 @@ export const generateClocks = () => {
     const angle = Math.min(360 - val, val);
 
     const mStr = m < 10 ? `0${m}` : m;
-    const questionText = `What is the angle between the hour hand and minute hand on a clock when the time is ${h}:${mStr} ?`;
+    const questionText = `What is the angle between the hour hand and minute hand on a clock when the time is $${h}:${mStr}$ ?`;
 
-    rows.push({ text: `Angle =`, unit: 'degrees', answer: String(angle) });
+    rows.push({ text: `$Angle =$`, unit: 'degrees', answer: String(angle) });
     const answerObj = { 0: String(angle) };
 
     return {
@@ -1102,10 +1106,10 @@ export const generateProbability = () => {
         { q: `$-3^2 = 9$`, a: 'False' },
         { q: `$\\frac{a}{a+b} = \\frac{a}{a} + \\frac{a}{b}$`, a: 'False' },
         { q: `$(a+b)^2 = a^2 + b^2$`, a: 'False' },
-        { q: `$\\sqrt{x^2+y^2} = x+y$`, a: 'False' },
-        { q: `$sin(90^\\circ) = 1$`, a: 'True' },
-        { q: `$2^3 \\times 2^2 = 2^5$`, a: 'True' },
-        { q: `$(-2)^3 = -8$`, a: 'True' }
+        // { q: `$\\sqrt{x^2+y^2} = x+y$`, a: 'False' },
+        // { q: `$sin(90^\\circ) = 1$`, a: 'True' },
+        // { q: `$2^3 \\times 2^2 = 2^5$`, a: 'True' },
+        // { q: `$2^2 = -8$`, a: 'False' }
     ];
 
     const selected = [];
@@ -1203,7 +1207,7 @@ export const generateDiceProbability = () => {
     return {
         type: 'tableInput',
         variant: 'fraction',
-        question: `Two dice are thrown at the same time. What is the probability that the sum of numbers on the dice is ${targetSum} ?`,
+        question: `Two dice are thrown at the same time. What is the probability that the sum of numbers on the dice is $${targetSum}$ ?`,
         answer: JSON.stringify(answerObj),
         rows: rows,
         topic: 'Probability'
@@ -1255,7 +1259,7 @@ export const generateAgeProblem = () => {
 
     return {
         type: 'tableInput',
-        question: `Robert's father is ${M} times as old as Robert. After ${Y} years, father will be ${Mf === 2 ? 'twice' : Mf === 3 ? 'three times' : Mf + ' times'} as old as Robert. Find their present ages.`,
+        question: `Robert's father is $${M}$ times as old as Robert. After $${Y}$ years, father will be ${Mf === 2 ? 'twice' : Mf === 3 ? 'three times' : '$' + Mf + '$ times'} as old as Robert. Find their present ages.`,
         answer: JSON.stringify(answerObj),
         rows: rows,
         topic: 'Linear Equations Word Problems'
@@ -1283,7 +1287,7 @@ export const generateNumberSquareProblem = () => {
 
     return {
         type: 'tableInput',
-        question: `The sum of a positive number and its square is ${X}. Find the number.`,
+        question: `The sum of a positive number and its square is $${X}$. Find the number.`,
         answer: JSON.stringify(answerObj),
         rows: rows,
         topic: 'Quadratic Equations Word Problems'

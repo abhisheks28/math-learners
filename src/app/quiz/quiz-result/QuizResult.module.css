@@ -675,6 +675,11 @@
     color: #64748b;
 }
 
+.statusPartial {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
 .timeInfo {
     display: flex;
     align-items: center;
@@ -982,6 +987,7 @@
         font-size: 0.8rem;
     }
 }
+
 /* Tutor Button Pulsing Animation */
 .tutorActionButton {
     animation: tutorPulse 2s ease-in-out infinite !important;
@@ -1007,10 +1013,13 @@
 }
 
 @keyframes tutorPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
     }
+
     50% {
         transform: scale(1.03);
         box-shadow: 0 8px 35px rgba(16, 185, 129, 0.5);
@@ -1018,18 +1027,24 @@
 }
 
 @keyframes tutorGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0;
     }
+
     50% {
         opacity: 0.4;
     }
 }
 
 @keyframes iconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.15);
     }

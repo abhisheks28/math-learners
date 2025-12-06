@@ -2,7 +2,8 @@
 import React, { useContext, useEffect, useState } from "react";
 import Styles from "../../app/quiz/quiz-result/QuizResult.module.css";
 import Navigation from "@/components/Navigation/Navigation.component";
-import { CheckCircle, XCircle, HelpCircle, Clock, Target, BookOpen, TrendingUp, BarChart3, FileText, X } from "lucide-react";
+import MathRenderer from "@/components/MathRenderer/MathRenderer.component";
+import { CheckCircle, XCircle, HelpCircle, Clock, Target, BookOpen, TrendingUp, BarChart3, FileText, X, AlertCircle } from "lucide-react";
 import { QuizSessionContext } from "../../app/context/QuizSessionContext";
 import analyzeResponses from "@/app/workload/GenerateReport";
 import Footer from "@/components/Footer/Footer.component";
@@ -11,6 +12,44 @@ import { firebaseDatabase, getUserDatabaseKey } from "@/backend/firebaseHandler"
 import { useRouter } from "next/navigation";
 import { Button, Dialog, DialogTitle, DialogContent, IconButton, CircularProgress, TextField, MenuItem, Link as MuiLink } from "@mui/material";
 import { useAuth } from "@/context/AuthContext";
+
+
+const formatAnswer = (answer) => {
+    if (!answer) return "";
+    try {
+        // Only try to parse if it looks like a JSON object
+        if (typeof answer === 'string' && answer.trim().startsWith('{')) {
+            const parsed = JSON.parse(answer);
+            const values = Object.values(parsed);
+
+            // Check if values are complex objects
+            if (values.length > 0 && typeof values[0] === 'object') {
+                return values.map(v => {
+                    if (v.num !== undefined && v.den !== undefined) {
+                        return `$\\frac{${v.num}}{${v.den}}$`;
+                    }
+                    if (v.x !== undefined && v.y !== undefined) {
+                        return `(${v.x}, ${v.y})`;
+                    }
+                    // Handle True/False variant (which might store value directly or in object?)
+                    // In TypeTableInput we saw it stores key: val directly?
+                    // Actually checking the code: 
+                    // TypeTableInput (default): answers[idx] = value (string) -> JSON: {"0":"True"}
+                    // So it falls to the 'else' block below (values.join).
+                    if (v.value !== undefined) {
+                        return v.value;
+                    }
+                    return JSON.stringify(v);
+                }).join(', ');
+            }
+
+            return values.join(', ');
+        }
+    } catch (e) {
+        // console.error("Error parsing answer JSON", e);
+    }
+    return answer;
+};
 
 const QuizResultClient = () => {
 
@@ -823,26 +862,59 @@ const QuizResultClient = () => {
                             <div key={`${q.questionId || 'q'}-${index}`} className={Styles.questionItem}>
                                 <div className={Styles.questionNumber}>Q{index + 1}</div>
                                 <div className={Styles.questionDetails}>
-                                    <p className={Styles.questionText}>{q.question}</p>
+                                    <div className={Styles.questionText}>
+                                        <MathRenderer content={q.question} />
+                                    </div>
                                     <span className={Styles.topicBadge}>{q.topic}</span>
                                     <div className={Styles.answerSection}>
                                         <div className={Styles.answerRow}>
                                             <span className={Styles.answerLabel}>Correct Answer:</span>
-                                            <span className={Styles.correctAnswer}>{q.correctAnswer}</span>
+                                            <div className={Styles.correctAnswer}>
+                                                <MathRenderer content={formatAnswer(q.correctAnswer)} />
+                                            </div>
                                         </div>
                                         <div className={Styles.answerRow}>
                                             <span className={Styles.answerLabel}>Your Answer:</span>
-                                            <span className={`${Styles.userAnswer} ${q.isCorrect ? Styles.correct : (q.attempted ? Styles.wrong : Styles.skipped)}`}>
-                                                {q.userAnswer || "Not Attempted"}
-                                            </span>
+                                            <div className={`${Styles.userAnswer} ${q.isCorrect ? Styles.correct : (q.attempted ? Styles.wrong : Styles.skipped)}`}>
+                                                {q.userAnswer ? <MathRenderer content={formatAnswer(q.userAnswer)} /> : "Not Attempted"}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className={Styles.questionStatus}>
-                                    <div className={`${Styles.statusBadge} ${q.isCorrect ? Styles.statusCorrect : (q.attempted ? Styles.statusWrong : Styles.statusSkipped)}`}>
-                                        {q.isCorrect ? <CheckCircle size={16} /> : (q.attempted ? <XCircle size={16} /> : <HelpCircle size={16} />)}
-                                        <span>{q.isCorrect ? "Correct" : (q.attempted ? "Wrong" : "Skipped")}</span>
-                                    </div>
+                                    {(() => {
+                                        // q.score is now available from analyzeResponses
+                                        const score = q.score !== undefined ? q.score : (q.isCorrect ? 1 : 0);
+                                        const isPartial = score > 0 && score < 1;
+                                        const isCorrect = score === 1;
+                                        const isWrong = score === 0 && q.attempted;
+                                        const isSkipped = !q.attempted;
+
+                                        let statusClass = Styles.statusSkipped;
+                                        let Icon = HelpCircle;
+                                        let text = "Not Answered";
+
+                                        if (isCorrect) {
+                                            statusClass = Styles.statusCorrect;
+                                            Icon = CheckCircle;
+                                            text = "Correct";
+                                        } else if (isPartial) {
+                                            statusClass = Styles.statusPartial;
+                                            Icon = AlertCircle;
+                                            text = "Partially Correct";
+                                        } else if (isWrong) {
+                                            statusClass = Styles.statusWrong;
+                                            Icon = XCircle;
+                                            text = "Wrong";
+                                        }
+
+                                        return (
+                                            <div className={`${Styles.statusBadge} ${statusClass}`}>
+                                                <Icon size={16} />
+                                                <span>{text}</span>
+                                            </div>
+                                        );
+                                    })()}
                                     <div className={Styles.timeInfo}>
                                         <Clock size={14} />
                                         <span>{q.timeTaken !== null ? `${q.timeTaken}s` : "N/A"}</span>

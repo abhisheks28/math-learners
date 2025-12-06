@@ -89,6 +89,7 @@ const TypeTableInput = ({ onClick, onPrevious, onAnswerChange, questionPaper, ac
                                     onChange={(e) => handleInputChange(idx, 'value', e.target.value)}
                                     className={Styles.radioInput}
                                 />
+                                <span style={{ marginLeft: '8px' }}>{opt}</span>
                             </label>
                         </div>
                     ))}

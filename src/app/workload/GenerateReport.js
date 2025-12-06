@@ -25,6 +25,51 @@ function analyzeResponses(responses, grade) {
         ? ""
         : String(value).trim();
 
+    // Helper to calculate score (supports partial marking for tableInput)
+    const calculateScore = (item, normalizeFunc) => {
+        const givenAnswer = normalizeFunc(item.userAnswer);
+        const correctAnswer = normalizeFunc(item.answer);
+
+        if (!givenAnswer) return 0;
+
+        // Partial marking for tableInput
+        if (item.type === 'tableInput' && (item.question || item.rows)) {
+            // We need to compare row by row.
+            // item.rows contains the structure.
+            // item.answer is the JSON string of ALL correct answers {0:..., 1:...}
+            // item.userAnswer is JSON string of user answers.
+
+            try {
+                const correctObj = JSON.parse(correctAnswer);
+                const userObj = JSON.parse(givenAnswer);
+
+                // If item.rows is present, use it for length. If not, use keys of correctObj?
+                // Generators usually attach rows to the question object.
+                const totalRows = item.rows ? item.rows.length : Object.keys(correctObj).length;
+
+                if (totalRows === 0) return givenAnswer === correctAnswer ? 1 : 0;
+
+                let matchCount = 0;
+                // We can iterate 0 to totalRows-1
+                for (let i = 0; i < totalRows; i++) {
+                    const u = userObj[i];
+                    const c = correctObj[i];
+                    // Strict equality for JSON objects/strings
+                    if (JSON.stringify(u) === JSON.stringify(c)) {
+                        matchCount++;
+                    }
+                }
+
+                return matchCount / totalRows;
+            } catch (e) {
+                // If parsing fails, fall back to strict match
+                return givenAnswer === correctAnswer ? 1 : 0;
+            }
+        }
+
+        return givenAnswer === correctAnswer ? 1 : 0;
+    };
+
     // Step 1: Iterate and compute per-question stats
     responses.forEach((item) => {
         const {
@@ -38,17 +83,27 @@ function analyzeResponses(responses, grade) {
 
         const correctAnswer = normalize(answer);
         const givenAnswer = normalize(userAnswer);
-        const attempted = givenAnswer !== "";
+        let attempted = givenAnswer !== "";
 
-        let isCorrect = false;
+        // Special check for TableInput empty JSON
+        if (attempted && givenAnswer.trim().startsWith('{')) {
+            try {
+                const parsed = JSON.parse(givenAnswer);
+                if (Object.keys(parsed).length === 0) {
+                    attempted = false;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        const score = calculateScore(item, normalize);
+        const isCorrect = score === 1; // Strict correct for badges
+
         if (attempted) {
             result.summary.attempted += 1;
-            isCorrect = (givenAnswer === correctAnswer);
-            if (isCorrect) {
-                result.summary.correct += 1;
-            } else {
-                result.summary.wrong += 1;
-            }
+            result.summary.correct += score;
+            result.summary.wrong += (1 - score);
         }
 
         // Track topic stats
@@ -62,11 +117,11 @@ function analyzeResponses(responses, grade) {
         }
 
         if (attempted) {
-            if (isCorrect) {
-                result.topicFeedback[topic].correctCount += 1;
-            } else {
-                result.topicFeedback[topic].wrongCount += 1;
-            }
+            // Updated topic stats to use scores? 
+            // Existing logic uses counts. Let's use score for consistency.
+            // correctCount becomes 'score obtained', wrongCount becomes 'score lost'
+            result.topicFeedback[topic].correctCount += score;
+            result.topicFeedback[topic].wrongCount += (1 - score);
         }
 
         // Per-question report
@@ -77,7 +132,8 @@ function analyzeResponses(responses, grade) {
             correctAnswer,
             userAnswer: givenAnswer || null,
             attempted,
-            isCorrect,
+            isCorrect, // Keep strict boolean for UI badges
+            score, // Add score for detailed view if needed
             timeTaken: typeof timeTaken === "number" ? timeTaken : null
         });
 
