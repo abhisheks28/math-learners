@@ -4,9 +4,9 @@
 }
 
 .quizResultContent {
-    max-width: 1200px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem 2rem;
 }
 
 .loadingWrapper {
@@ -23,14 +23,14 @@
 /* Hero Section */
 .heroSection {
     background: white;
-    border-radius: 1.5rem;
-    padding: 3rem;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    border-radius: 1rem;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 3rem;
+    gap: 2rem;
 }
 
 .heroContent {
@@ -43,7 +43,7 @@
     gap: 0.75rem;
     font-size: 0.9rem;
     color: #64748b;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem;
 }
 
 .userName {
@@ -56,10 +56,10 @@
 }
 
 .mainTitle {
-    font-size: 2.5rem;
+    font-size: 2rem;
     font-weight: 800;
     color: #1e293b;
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.25rem 0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -67,7 +67,7 @@
 }
 
 .subtitle {
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: #64748b;
     margin: 0;
 }
@@ -77,7 +77,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.5rem;
+    gap: 1rem;
 }
 
 .scoreCircle {
@@ -122,7 +122,7 @@
 }
 
 .scoreLabel {
-    font-size: 0.875rem;
+    font-size: 1rem;
     color: #64748b;
     margin-top: 0.25rem;
 }
@@ -138,84 +138,130 @@
 }
 
 .scoreValue {
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #1e293b;
 }
 
-/* Stats Section */
-.statsSection {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+/* Hero Stats Integration */
+.heroStats {
+    display: flex;
+    align-items: center;
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    padding-left: 1rem;
+    border-left: 1px solid #e2e8f0;
 }
 
-.statCard {
-    background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
+.heroStatItem {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    gap: 0.25rem;
+    min-width: 80px;
 }
 
-.statCard:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-}
-
-.statIconWrapper {
-    width: 60px;
+.heroChartContainer {
     height: 60px;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    width: 200px;
+    margin-left: 2rem;
 }
 
-.wrongIcon {
-    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.skippedIcon {
-    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-}
-
-.totalIcon {
-    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-}
-
-.statIcon {
-    color: white;
-}
-
-.statContent {
-    flex: 1;
-}
-
-.statValue {
-    font-size: 2rem;
-    font-weight: 800;
+.heroStatValue {
+    font-size: 1.5rem;
+    font-weight: 700;
     color: #1e293b;
     line-height: 1;
 }
 
-.statLabel {
-    font-size: 0.875rem;
+.heroStatLabel {
+    font-size: 0.75rem;
     color: #64748b;
-    margin-top: 0.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.statColorCorrect {
+    color: #16a34a;
+}
+
+.statColorWrong {
+    color: #dc2626;
+}
+
+.statColorSkipped {
+    color: #d97706;
+}
+
+/* Responsive adjustments for Hero Stats */
+@media (max-width: 1024px) {
+    .heroStats {
+        width: 100%;
+        padding-left: 0;
+        border-left: none;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 1.5rem;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .heroChartContainer {
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .heroSection {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+        gap: 1.5rem;
+    }
+
+    .heroContent {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .userInfo {
+        justify-content: center;
+        width: 100%;
+        flex-wrap: wrap;
+    }
+
+    .heroStats {
+        flex-wrap: wrap;
+        width: 100%;
+        justify-content: center;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+        border-left: none;
+        padding-left: 0;
+        gap: 1.5rem;
+    }
+
+    .heroChartContainer {
+        margin-left: 0;
+        width: 100%;
+        max-width: 260px;
+        margin-top: 0.5rem;
+    }
+
+    .scoreCard {
+        width: 100%;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
 }
 
 /* Action Section */
 .actionSection {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .actionButton {
@@ -675,6 +721,11 @@
     color: #64748b;
 }
 
+.statusPartial {
+    background: #ffedd5;
+    color: #c2410c;
+}
+
 .timeInfo {
     display: flex;
     align-items: center;
@@ -982,6 +1033,7 @@
         font-size: 0.8rem;
     }
 }
+
 /* Tutor Button Pulsing Animation */
 .tutorActionButton {
     animation: tutorPulse 2s ease-in-out infinite !important;
@@ -1007,10 +1059,13 @@
 }
 
 @keyframes tutorPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
         box-shadow: 0 4px 20px rgba(16, 185, 129, 0.3);
     }
+
     50% {
         transform: scale(1.03);
         box-shadow: 0 8px 35px rgba(16, 185, 129, 0.5);
@@ -1018,18 +1073,24 @@
 }
 
 @keyframes tutorGlow {
-    0%, 100% {
+
+    0%,
+    100% {
         opacity: 0;
     }
+
     50% {
         opacity: 0.4;
     }
 }
 
 @keyframes iconPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.15);
     }

@@ -29,7 +29,8 @@ const QuizClient = () => {
     const [hydrationDone, setHydrationDone] = useState(false);
     const [hasStoredSession, setHasStoredSession] = useState(false);
 
-    const timeTakeRef = useRef(null);
+    const timeTakeRef = useRef(1800);
+    const lastTimeRef = useRef(1800); // Track when we started the current question
     const router = useRouter();
 
     if (!QuizSessionContext) {
@@ -59,6 +60,8 @@ const QuizClient = () => {
             }
             if (typeof parsed.remainingTime === "number") {
                 setRemainingTime(parsed.remainingTime);
+                timeTakeRef.current = parsed.remainingTime;
+                lastTimeRef.current = parsed.remainingTime;
             }
         } catch (e) {
             // ignore malformed storage
@@ -81,7 +84,9 @@ const QuizClient = () => {
             return;
         }
 
-        switch (quizContext.userDetails.grade) {
+        const userGrade = quizContext.userDetails.activeChild?.grade || quizContext.userDetails.grade;
+
+        switch (userGrade) {
             case "Grade 1": {
                 gradeQuestionPaper = { ...GetGrade1Question };
                 break;
@@ -225,35 +230,26 @@ const QuizClient = () => {
         }
     }
 
-    const handleTimerFinished = (time) => {
-        // Auto-submit when timer finishes
-        const currentQuestion = { ...questionPaper[activeQuestionIndex] }
-        currentQuestion.timeTaken = time;
+    // Helper to calculate time spent and save progress
+    const saveCurrentProgress = (answer) => {
+        if (!questionPaper[activeQuestionIndex]) return;
 
-        const newQuestionPaper = [...questionPaper];
-        newQuestionPaper[activeQuestionIndex] = currentQuestion;
+        const currentTime = timeTakeRef.current ?? remainingTime;
+        // Calculate duration spent on this question since last check
+        const duration = Math.max(0, lastTimeRef.current - currentTime);
 
-        setQuizContext(state => ({ ...state, questionPaper: newQuestionPaper }));
+        // Update lastTimeRef for the next question/step
+        lastTimeRef.current = currentTime;
 
-        try {
-            if (typeof window !== "undefined" && quizContext.userDetails && questionPaper && questionPaper.length > 0) {
-                window.localStorage.setItem("quizSession", JSON.stringify({
-                    ...quizContext,
-                    questionPaper: newQuestionPaper,
-                    activeQuestionIndex,
-                    remainingTime: 0
-                }));
-            }
-        } catch (e) {
-            // ignore storage errors
+        const currentQuestion = { ...questionPaper[activeQuestionIndex] };
+
+        // Accumulate timeTaken (init to 0 if null/undefined)
+        const prevTime = currentQuestion.timeTaken || 0;
+        currentQuestion.timeTaken = prevTime + duration;
+
+        if (answer !== undefined) {
+            currentQuestion.userAnswer = answer;
         }
-        router.replace("quiz/quiz-result");
-    }
-
-    const handleNext = (answer, time) => {
-        const currentQuestion = { ...questionPaper[activeQuestionIndex] }
-        currentQuestion.userAnswer = answer;
-        currentQuestion.timeTaken = time;
 
         const newQuestionPaper = [...questionPaper];
         newQuestionPaper[activeQuestionIndex] = currentQuestion;
@@ -262,61 +258,105 @@ const QuizClient = () => {
         setQuizContext(state => ({ ...state, questionPaper: newQuestionPaper }));
 
         try {
-            if (typeof window !== "undefined" && quizContext.userDetails && questionPaper && questionPaper.length > 0) {
+            if (typeof window !== "undefined" && quizContext.userDetails && newQuestionPaper.length > 0) {
                 window.localStorage.setItem("quizSession", JSON.stringify({
                     ...quizContext,
                     questionPaper: newQuestionPaper,
-                    activeQuestionIndex: (activeQuestionIndex + 1) >= questionPaper.length ? activeQuestionIndex : activeQuestionIndex + 1,
-                    remainingTime
+                    activeQuestionIndex,
+                    remainingTime: currentTime
                 }));
             }
         } catch (e) {
-            // ignore storage errors
+            // ignore
         }
+        return newQuestionPaper;
+    };
+
+    const handleTimerFinished = (time) => {
+        // Auto-submit when timer finishes
+        // Update time one last time
+        timeTakeRef.current = 0;
+        const newQuestionPaper = saveCurrentProgress();
+
+        // Force save with 0 time
+        try {
+            if (typeof window !== "undefined" && quizContext.userDetails && newQuestionPaper && newQuestionPaper.length > 0) {
+                window.localStorage.setItem("quizSession", JSON.stringify({
+                    ...quizContext,
+                    questionPaper: newQuestionPaper,
+                    activeQuestionIndex,
+                    remainingTime: 0
+                }));
+            }
+        } catch (e) { }
+
+        router.replace("quiz/quiz-result");
+    }
+
+    const handleNext = (answer, time) => {
+        // time argument might be stale or redundant if we use refs, but let's trust refs
+        saveCurrentProgress(answer);
 
         if ((activeQuestionIndex + 1) >= questionPaper.length) {
             router.replace("quiz/quiz-result");
             return;
         }
-        setActiveQuestionIndex(activeQuestionIndex + 1)
+
+        const nextIndex = activeQuestionIndex + 1;
+        setActiveQuestionIndex(nextIndex);
+
+        // Update storage for index change
+        try {
+            if (typeof window !== "undefined") {
+                // We need to fetch the LATEST paper state because saveCurrentProgress updated it in state/storage
+                // But react state update might be async.
+                // However, saveCurrentProgress wrote to localStorage.
+                // We can just update the index in the stored object if we want, or rely on the effect.
+                // Actually safer to re-read or just update index.
+                const stored = window.localStorage.getItem("quizSession");
+                if (stored) {
+                    const parsed = JSON.parse(stored);
+                    parsed.activeQuestionIndex = nextIndex;
+                    window.localStorage.setItem("quizSession", JSON.stringify(parsed));
+                }
+            }
+        } catch (e) { }
     }
 
     const handlePrevious = () => {
         if (activeQuestionIndex > 0) {
+            saveCurrentProgress(); // Save time for current Q before leaving
+
             const newIndex = activeQuestionIndex - 1;
             setActiveQuestionIndex(newIndex);
-
             try {
-                if (typeof window !== "undefined" && quizContext.userDetails && questionPaper && questionPaper.length > 0) {
-                    window.localStorage.setItem("quizSession", JSON.stringify({
-                        ...quizContext,
-                        questionPaper,
-                        activeQuestionIndex: newIndex,
-                        remainingTime
-                    }));
+                if (typeof window !== "undefined") {
+                    const stored = window.localStorage.getItem("quizSession");
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        parsed.activeQuestionIndex = newIndex;
+                        window.localStorage.setItem("quizSession", JSON.stringify(parsed));
+                    }
                 }
-            } catch (e) {
-                // ignore storage errors
-            }
+            } catch (e) { }
         }
     }
 
     const handleJumpToQuestion = (index) => {
         if (index >= 0 && index < questionPaper.length) {
-            setActiveQuestionIndex(index);
+            saveCurrentProgress(); // Save time for current Q before leaving
 
+            setActiveQuestionIndex(index);
             try {
-                if (typeof window !== "undefined" && quizContext.userDetails && questionPaper && questionPaper.length > 0) {
-                    window.localStorage.setItem("quizSession", JSON.stringify({
-                        ...quizContext,
-                        questionPaper,
-                        activeQuestionIndex: index,
-                        remainingTime
-                    }));
+                if (typeof window !== "undefined") {
+                    const stored = window.localStorage.getItem("quizSession");
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        parsed.activeQuestionIndex = index;
+                        window.localStorage.setItem("quizSession", JSON.stringify(parsed));
+                    }
                 }
-            } catch (e) {
-                // ignore storage errors
-            }
+            } catch (e) { }
         }
     }
 
@@ -387,7 +427,7 @@ const QuizClient = () => {
                             question={questionPaper[activeQuestionIndex].question}
                             topic={questionPaper[activeQuestionIndex].topic}
                             options={questionPaper[activeQuestionIndex].options}
-                            grade={quizContext.userDetails?.grade}
+                            grade={quizContext.userDetails.activeChild?.grade || quizContext.userDetails.grade}
                             timeTakeRef={timeTakeRef}
                             image={questionPaper[activeQuestionIndex].image}
                         /> : null
@@ -403,7 +443,7 @@ const QuizClient = () => {
                             activeQuestionIndex={activeQuestionIndex}
                             question={questionPaper[activeQuestionIndex].question}
                             topic={questionPaper[activeQuestionIndex].topic}
-                            grade={quizContext.userDetails?.grade}
+                            grade={quizContext.userDetails.activeChild?.grade || quizContext.userDetails.grade}
                             timeTakeRef={timeTakeRef}
                         /> : null
                 }
@@ -416,7 +456,7 @@ const QuizClient = () => {
                             questionPaper={questionPaper}
                             activeQuestionIndex={activeQuestionIndex}
                             topic={questionPaper[activeQuestionIndex].topic}
-                            grade={quizContext.userDetails?.grade}
+                            grade={quizContext.userDetails.activeChild?.grade || quizContext.userDetails.grade}
                             timeTakeRef={timeTakeRef}
                         /> : null
                 }
@@ -431,7 +471,7 @@ const QuizClient = () => {
                             activeQuestionIndex={activeQuestionIndex}
                             question={questionPaper[activeQuestionIndex].question}
                             topic={questionPaper[activeQuestionIndex].topic}
-                            grade={quizContext.userDetails?.grade}
+                            grade={quizContext.userDetails.activeChild?.grade || quizContext.userDetails.grade}
                             timeTakeRef={timeTakeRef}
                         /> : null
                 }

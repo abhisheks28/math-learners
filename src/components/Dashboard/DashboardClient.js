@@ -6,7 +6,7 @@ import Navigation from "@/components/Navigation/Navigation.component";
 import Footer from "@/components/Footer/Footer.component";
 import PhoneNumberDialog from "@/components/Auth/PhoneNumberDialog";
 import { CircularProgress, Button, FormControl, InputLabel, Select, MenuItem, TextField, Dialog, DialogTitle, DialogContent, Card, CardContent } from "@mui/material";
-import { User, LogOut, BookOpen, Clock, Award, ChevronRight, Edit2 } from "lucide-react";
+import { User, LogOut, BookOpen, Clock, Award, ChevronRight, Edit2, GraduationCap } from "lucide-react";
 import { ref, get, set } from "firebase/database";
 import { firebaseDatabase, getUserDatabaseKey } from "@/backend/firebaseHandler";
 import Styles from "../../app/dashboard/Dashboard.module.css";
@@ -29,14 +29,25 @@ const DashboardClient = () => {
     const [editingChildId, setEditingChildId] = useState(null);
     const [childForm, setChildForm] = useState({
         name: "",
-        email: "",
-        schoolName: "",
-        city: "",
         grade: ""
     });
 
+    // Check for local quiz session before redirecting
     useEffect(() => {
         if (!loading && !user) {
+            // Check for local quiz session before redirecting
+            if (typeof window !== "undefined") {
+                const quizSession = window.localStorage.getItem("quizSession");
+                if (quizSession) {
+                    try {
+                        const parsed = JSON.parse(quizSession);
+                        if (parsed?.userDetails) {
+                            // Valid local session, do not redirect
+                            return;
+                        }
+                    } catch (e) { }
+                }
+            }
             router.replace("/");
         }
     }, [user, loading, router]);
@@ -79,18 +90,35 @@ const DashboardClient = () => {
 
     // Initialize active child based on userData and persisted preference
     useEffect(() => {
-        if (!user || !userData || !userData.children) return;
+        const currentUserData = userData || (typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("quizSession"))?.userDetails : null);
 
-        // Get user key (works for phone, Google, and email auth)
-        const userKey = getUserDatabaseKey(user);
-        const storedChildId = typeof window !== "undefined"
+        if ((!user && !currentUserData) || (!userData && !currentUserData) || !currentUserData.children) return;
+
+        // Robust user key retrieval
+        let userKey = null;
+        if (user) {
+            userKey = getUserDatabaseKey(user);
+        }
+        if (!userKey && currentUserData) {
+            userKey = currentUserData.userKey || currentUserData.phoneNumber || currentUserData.parentPhone || currentUserData.parentEmail;
+        }
+
+        if (!userKey) return;
+
+        let storedChildId = typeof window !== "undefined"
             ? window.localStorage.getItem(`activeChild_${userKey}`)
             : null;
 
-        const childKeys = Object.keys(userData.children || {});
+        // Fallback to generic key if specific key fails
+        if (!storedChildId && typeof window !== "undefined") {
+            storedChildId = window.localStorage.getItem('lastActiveChild');
+        }
+
+        const childKeys = Object.keys(currentUserData.children || {});
         if (storedChildId && childKeys.includes(storedChildId)) {
             setActiveChildId(storedChildId);
         } else if (childKeys.length > 0) {
+            // Default to first child if no preference stored
             setActiveChildId(childKeys[0]);
         }
     }, [user, userData]);
@@ -98,12 +126,20 @@ const DashboardClient = () => {
     // Fetch reports for the selected child, with simple per-child caching
     useEffect(() => {
         const fetchReports = async () => {
-            if (user && activeChildId) {
+            if (activeChildId) {
                 setFetchingReports(true);
                 try {
-                    // Get user key (works for phone, Google, and email auth)
-                    const userKey = getUserDatabaseKey(user);
-                    const reportsRef = ref(firebaseDatabase, `NMD_2025/Reports/${userKey}/${activeChildId}`);
+                    // Get user key
+                    let userKey = user ? getUserDatabaseKey(user) : null;
+                    if (!userKey && typeof window !== "undefined") {
+                        const quizSession = JSON.parse(window.localStorage.getItem("quizSession") || "{}");
+                        userKey = quizSession?.userDetails?.userKey || quizSession?.userDetails?.phoneNumber || quizSession?.userDetails?.parentPhone || quizSession?.userDetails?.parentEmail;
+                    }
+
+                    if (!userKey) return;
+
+                    const finalUserKey = userKey.replace('.', '_'); // Consistent sanitization with Saver
+                    const reportsRef = ref(firebaseDatabase, `NMD_2025/Reports/${finalUserKey}/${activeChildId}`);
                     const snapshot = await get(reportsRef);
                     if (snapshot.exists()) {
                         const data = snapshot.val();
@@ -126,7 +162,7 @@ const DashboardClient = () => {
                 }
             }
         };
-        if (user && activeChildId) {
+        if (activeChildId) {
             // If we have a cached value for this child, use it immediately for snappy UI
             if (reportsCache.hasOwnProperty(activeChildId)) {
                 setReports(reportsCache[activeChildId]);
@@ -135,12 +171,13 @@ const DashboardClient = () => {
                 fetchReports();
             }
         }
-    }, [user, activeChildId, reportsCache]);
+    }, [user, activeChildId]);
 
-    const children = userData?.children || null;
+    const effectiveUserData = userData || (typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("quizSession") || "{}")?.userDetails : null);
+    const children = effectiveUserData?.children || null;
     const activeChild = children && activeChildId ? children[activeChildId] : null;
 
-    if (loading || !user) {
+    if (loading) {
         return (
             <div className={Styles.loadingContainer}>
                 <CircularProgress />
@@ -149,6 +186,10 @@ const DashboardClient = () => {
     }
 
     const handleLogout = async () => {
+        // Clear local storage explicitly
+        if (typeof window !== "undefined") {
+            window.localStorage.removeItem("quizSession");
+        }
         await logout();
         router.replace("/");
     };
@@ -156,11 +197,20 @@ const DashboardClient = () => {
     const handleChildChange = (event) => {
         const newChildId = event.target.value;
         setActiveChildId(newChildId);
-        if (user) {
-            // Get user key (works for phone, Google, and email auth)
-            const userKey = getUserDatabaseKey(user);
-            if (typeof window !== "undefined") {
+
+        // Persist preference
+        if (user || userData) {
+            let userKey = null;
+            if (user) {
+                userKey = getUserDatabaseKey(user);
+            }
+            if (!userKey && userData) {
+                userKey = userData.userKey || userData.phoneNumber || userData.parentPhone || userData.parentEmail; // Robust fallback
+            }
+
+            if (userKey && typeof window !== "undefined") {
                 window.localStorage.setItem(`activeChild_${userKey}`, newChildId);
+                window.localStorage.setItem('lastActiveChild', newChildId); // Generic fallback
             }
         }
     };
@@ -168,9 +218,6 @@ const DashboardClient = () => {
     const handleOpenAddChild = () => {
         setChildForm({
             name: "",
-            email: "",
-            schoolName: "",
-            city: "",
             grade: ""
         });
         setAddChildOpen(true);
@@ -179,8 +226,8 @@ const DashboardClient = () => {
     const handleSaveChild = async () => {
         if (!user || !userData) return;
 
-        const { name, schoolName, city, grade } = childForm;
-        if (!name || !schoolName || !city || !grade) {
+        const { name, grade } = childForm;
+        if (!name || !grade) {
             return;
         }
 
@@ -223,9 +270,6 @@ const DashboardClient = () => {
 
         setChildForm({
             name: activeChild.name,
-            email: activeChild.email || '',
-            schoolName: activeChild.schoolName,
-            city: activeChild.city,
             grade: activeChild.grade
         });
         setEditingChildId(activeChildId);
@@ -235,8 +279,8 @@ const DashboardClient = () => {
     const handleUpdateChild = async () => {
         if (!user || !userData || !editingChildId) return;
 
-        const { name, schoolName, city, grade } = childForm;
-        if (!name || !schoolName || !city || !grade) {
+        const { name, grade } = childForm;
+        if (!name || !grade) {
             return;
         }
 
@@ -444,54 +488,50 @@ const DashboardClient = () => {
                 <DialogTitle>Add Child Profile</DialogTitle>
                 <DialogContent>
                     <div className={Styles.addChildForm}>
-                        <TextField
-                            fullWidth
-                            label="Full Name"
-                            margin="normal"
-                            value={childForm.name}
-                            onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="Email (optional)"
-                            type="email"
-                            margin="normal"
-                            value={childForm.email}
-                            onChange={(e) => setChildForm({ ...childForm, email: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="School Name"
-                            margin="normal"
-                            value={childForm.schoolName}
-                            onChange={(e) => setChildForm({ ...childForm, schoolName: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="City"
-                            margin="normal"
-                            value={childForm.city}
-                            onChange={(e) => setChildForm({ ...childForm, city: e.target.value })}
-                        />
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Grade</InputLabel>
-                            <Select
-                                value={childForm.grade}
-                                label="Grade"
-                                onChange={(e) => setChildForm({ ...childForm, grade: e.target.value })}
-                            >
-                                {[...Array(10)].map((_, i) => (
-                                    <MenuItem key={i + 1} value={`Grade ${i + 1}`}>
-                                        Grade {i + 1}
+                        <div className={Styles.inputGroup}>
+                            <User className={Styles.inputIcon} size={20} />
+                            <TextField
+                                fullWidth
+                                placeholder="Enter full name"
+                                variant="outlined"
+                                margin="none"
+                                value={childForm.name}
+                                onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
+                                className={Styles.textField}
+                            />
+                        </div>
+
+                        <div className={Styles.gradeSection}>
+                            <label className={Styles.gradeLabel}>Which grade is the student in?</label>
+                            <FormControl fullWidth className={Styles.gradeSelect}>
+                                <Select
+                                    value={childForm.grade}
+                                    displayEmpty
+                                    onChange={(e) => setChildForm({ ...childForm, grade: e.target.value })}
+                                    renderValue={(selected) => {
+                                        if (!selected) {
+                                            return <span style={{ color: '#9ca3af' }}>Select Grade</span>;
+                                        }
+                                        return selected;
+                                    }}
+                                >
+                                    <MenuItem disabled value="">
+                                        <em>Select Grade</em>
                                     </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                    {[...Array(10)].map((_, i) => (
+                                        <MenuItem key={i + 1} value={`Grade ${i + 1}`}>
+                                            Grade {i + 1}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </div>
+
                         <Button
                             variant="contained"
                             onClick={handleSaveChild}
-                            disabled={!childForm.name || !childForm.schoolName || !childForm.city || !childForm.grade}
-                            sx={{ mt: 2 }}
+                            disabled={!childForm.name || !childForm.grade}
+                            className={Styles.actionButton}
                         >
                             Save Child
                         </Button>
@@ -509,54 +549,50 @@ const DashboardClient = () => {
                 <DialogTitle>Edit Child Profile</DialogTitle>
                 <DialogContent>
                     <div className={Styles.addChildForm}>
-                        <TextField
-                            fullWidth
-                            label="Full Name"
-                            margin="normal"
-                            value={childForm.name}
-                            onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="Email (optional)"
-                            type="email"
-                            margin="normal"
-                            value={childForm.email}
-                            onChange={(e) => setChildForm({ ...childForm, email: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="School Name"
-                            margin="normal"
-                            value={childForm.schoolName}
-                            onChange={(e) => setChildForm({ ...childForm, schoolName: e.target.value })}
-                        />
-                        <TextField
-                            fullWidth
-                            label="City"
-                            margin="normal"
-                            value={childForm.city}
-                            onChange={(e) => setChildForm({ ...childForm, city: e.target.value })}
-                        />
-                        <FormControl fullWidth margin="normal">
-                            <InputLabel>Grade</InputLabel>
-                            <Select
-                                value={childForm.grade}
-                                label="Grade"
-                                onChange={(e) => setChildForm({ ...childForm, grade: e.target.value })}
-                            >
-                                {[...Array(10)].map((_, i) => (
-                                    <MenuItem key={i + 1} value={`Grade ${i + 1}`}>
-                                        Grade {i + 1}
+                        <div className={Styles.inputGroup}>
+                            <User className={Styles.inputIcon} size={20} />
+                            <TextField
+                                fullWidth
+                                placeholder="Enter full name"
+                                variant="outlined"
+                                margin="none"
+                                value={childForm.name}
+                                onChange={(e) => setChildForm({ ...childForm, name: e.target.value })}
+                                className={Styles.textField}
+                            />
+                        </div>
+
+                        <div className={Styles.gradeSection}>
+                            <label className={Styles.gradeLabel}>Which grade is the student in?</label>
+                            <FormControl fullWidth className={Styles.gradeSelect}>
+                                <Select
+                                    value={childForm.grade}
+                                    displayEmpty
+                                    onChange={(e) => setChildForm({ ...childForm, grade: e.target.value })}
+                                    renderValue={(selected) => {
+                                        if (!selected) {
+                                            return <span style={{ color: '#9ca3af' }}>Select Grade</span>;
+                                        }
+                                        return selected;
+                                    }}
+                                >
+                                    <MenuItem disabled value="">
+                                        <em>Select Grade</em>
                                     </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                    {[...Array(10)].map((_, i) => (
+                                        <MenuItem key={i + 1} value={`Grade ${i + 1}`}>
+                                            Grade {i + 1}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
+                        </div>
+
                         <Button
                             variant="contained"
                             onClick={handleUpdateChild}
-                            disabled={!childForm.name || !childForm.schoolName || !childForm.city || !childForm.grade}
-                            sx={{ mt: 2 }}
+                            disabled={!childForm.name || !childForm.grade}
+                            className={Styles.actionButton}
                         >
                             Save Changes
                         </Button>

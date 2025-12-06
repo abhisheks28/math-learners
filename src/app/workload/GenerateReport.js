@@ -25,6 +25,65 @@ function analyzeResponses(responses, grade) {
         ? ""
         : String(value).trim();
 
+    // Helper to calculate score (supports partial marking for tableInput)
+    const calculateScore = (item, normalizeFunc) => {
+        const givenAnswer = normalizeFunc(item.userAnswer);
+        const correctAnswer = normalizeFunc(item.answer);
+
+        if (!givenAnswer) return 0;
+
+        // Partial marking for tableInput
+        if (item.type === 'tableInput' && (item.question || item.rows)) {
+            // We need to compare row by row.
+            try {
+                const correctObj = JSON.parse(correctAnswer);
+                const userObj = JSON.parse(givenAnswer);
+
+                // If item.rows is present, use it for length. If not, use keys of correctObj
+                const totalRows = item.rows ? item.rows.length : Object.keys(correctObj).length;
+
+                if (totalRows === 0) return givenAnswer === correctAnswer ? 1 : 0;
+
+                let matchCount = 0;
+                for (let i = 0; i < totalRows; i++) {
+                    const u = userObj[i];
+                    const c = correctObj[i];
+
+                    // Check for fraction comparison
+                    if (u && c && (u.num !== undefined || u.d !== undefined) && (u.den !== undefined || u.d !== undefined) && c.num !== undefined && c.den !== undefined) {
+                        // Normalize key names: tableInput uses 'num'/'den'
+                        // Use parseFloat to handle strings like "4" or "4.0" or even "4.5" if user enters decimals
+                        const uNum = parseFloat(u.num);
+                        const uDen = parseFloat(u.den);
+                        const cNum = parseFloat(c.num);
+                        const cDen = parseFloat(c.den);
+
+                        if (!isNaN(uNum) && !isNaN(uDen) && !isNaN(cNum) && !isNaN(cDen) && uDen !== 0 && cDen !== 0) {
+                            // Cross multiply with epsilon for float safety: |uNum/uDen - cNum/cDen| < epsilon
+                            // => |uNum*cDen - cNum*uDen| < epsilon
+                            if (Math.abs(uNum * cDen - cNum * uDen) < 0.0001) {
+                                matchCount++;
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Strict equality for JSON objects/strings fallback
+                    if (JSON.stringify(u) === JSON.stringify(c)) {
+                        matchCount++;
+                    }
+                }
+
+                return matchCount / totalRows;
+            } catch (e) {
+                // If parsing fails, fall back to strict match
+                return givenAnswer === correctAnswer ? 1 : 0;
+            }
+        }
+
+        return givenAnswer === correctAnswer ? 1 : 0;
+    };
+
     // Step 1: Iterate and compute per-question stats
     responses.forEach((item) => {
         if (!item) return;
@@ -39,17 +98,27 @@ function analyzeResponses(responses, grade) {
 
         const correctAnswer = normalize(answer);
         const givenAnswer = normalize(userAnswer);
-        const attempted = givenAnswer !== "";
+        let attempted = givenAnswer !== "";
 
-        let isCorrect = false;
+        // Special check for TableInput empty JSON
+        if (attempted && givenAnswer.trim().startsWith('{')) {
+            try {
+                const parsed = JSON.parse(givenAnswer);
+                if (Object.keys(parsed).length === 0) {
+                    attempted = false;
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        const score = calculateScore(item, normalize);
+        const isCorrect = score === 1; // Strict correct for badges
+
         if (attempted) {
             result.summary.attempted += 1;
-            isCorrect = (givenAnswer === correctAnswer);
-            if (isCorrect) {
-                result.summary.correct += 1;
-            } else {
-                result.summary.wrong += 1;
-            }
+            result.summary.correct += score;
+            result.summary.wrong += (1 - score);
         }
 
         // Track topic stats
@@ -63,11 +132,8 @@ function analyzeResponses(responses, grade) {
         }
 
         if (attempted) {
-            if (isCorrect) {
-                result.topicFeedback[topic].correctCount += 1;
-            } else {
-                result.topicFeedback[topic].wrongCount += 1;
-            }
+            result.topicFeedback[topic].correctCount += score;
+            result.topicFeedback[topic].wrongCount += (1 - score);
         }
 
         // Per-question report
@@ -78,7 +144,8 @@ function analyzeResponses(responses, grade) {
             correctAnswer,
             userAnswer: givenAnswer || null,
             attempted,
-            isCorrect,
+            isCorrect, // Keep strict boolean for UI badges
+            score, // Add score for detailed view if needed
             timeTaken: typeof timeTaken === "number" ? timeTaken : null
         });
 

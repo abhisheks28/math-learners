@@ -1,8 +1,46 @@
 "use client";
 import React, { useContext, useEffect, useState } from "react";
 import Styles from "../../app/quiz/quiz-result/QuizResult.module.css";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+
+// ... existing code ...
+
+const HeroChart = ({ summary, notAttempted }) => {
+    const data = [
+        {
+            name: 'Performance',
+            correct: summary.correct,
+            wrong: summary.wrong,
+            skipped: notAttempted,
+        },
+    ];
+
+    return (
+        <div className={Styles.heroChartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={data} barSize={20}>
+                    <XAxis type="number" hide domain={[0, 'dataMax']} />
+                    <YAxis type="category" dataKey="name" hide />
+                    <RechartsTooltip
+                        cursor={{ fill: 'transparent' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Bar dataKey="correct" stackId="a" fill="#16a34a" radius={[4, 0, 0, 4]} />
+                    <Bar dataKey="wrong" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="skipped" stackId="a" fill="#d97706" radius={[0, 4, 4, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                <span>{summary.correct} Correct</span>
+                <span>{summary.wrong} Wrong</span>
+            </div>
+        </div>
+    );
+};
+
 import Navigation from "@/components/Navigation/Navigation.component";
-import { CheckCircle, XCircle, HelpCircle, Clock, Target, BookOpen, TrendingUp, BarChart3, FileText, X } from "lucide-react";
+import MathRenderer from "@/components/MathRenderer/MathRenderer.component";
+import { CheckCircle, XCircle, HelpCircle, Clock, Target, BookOpen, TrendingUp, BarChart3, FileText, X, AlertCircle } from "lucide-react";
 import { QuizSessionContext } from "../../app/context/QuizSessionContext";
 import analyzeResponses from "@/app/workload/GenerateReport";
 import Footer from "@/components/Footer/Footer.component";
@@ -11,6 +49,44 @@ import { firebaseDatabase, getUserDatabaseKey } from "@/backend/firebaseHandler"
 import { useRouter } from "next/navigation";
 import { Button, Dialog, DialogTitle, DialogContent, IconButton, CircularProgress, TextField, MenuItem, Link as MuiLink } from "@mui/material";
 import { useAuth } from "@/context/AuthContext";
+
+
+const formatAnswer = (answer) => {
+    if (!answer) return "";
+    try {
+        // Only try to parse if it looks like a JSON object
+        if (typeof answer === 'string' && answer.trim().startsWith('{')) {
+            const parsed = JSON.parse(answer);
+            const values = Object.values(parsed);
+
+            // Check if values are complex objects
+            if (values.length > 0 && typeof values[0] === 'object') {
+                return values.map(v => {
+                    if (v.num !== undefined && v.den !== undefined) {
+                        return `$\\frac{${v.num}}{${v.den}}$`;
+                    }
+                    if (v.x !== undefined && v.y !== undefined) {
+                        return `(${v.x}, ${v.y})`;
+                    }
+                    // Handle True/False variant (which might store value directly or in object?)
+                    // In TypeTableInput we saw it stores key: val directly?
+                    // Actually checking the code: 
+                    // TypeTableInput (default): answers[idx] = value (string) -> JSON: {"0":"True"}
+                    // So it falls to the 'else' block below (values.join).
+                    if (v.value !== undefined) {
+                        return v.value;
+                    }
+                    return JSON.stringify(v);
+                }).join(', ');
+            }
+
+            return values.join(', ');
+        }
+    } catch (e) {
+        // console.error("Error parsing answer JSON", e);
+    }
+    return answer;
+};
 
 const QuizResultClient = () => {
 
@@ -24,9 +100,10 @@ const QuizResultClient = () => {
     useEffect(() => {
         const loadReport = async () => {
             try {
+                const userGrade = quizSession?.userDetails?.activeChild?.grade || quizSession?.userDetails?.grade;
                 // Case 1: We have an in-memory quizSession with questionPaper (coming directly from quiz)
-                if (quizSession?.questionPaper && quizSession?.userDetails?.grade) {
-                    const computed = analyzeResponses(quizSession.questionPaper, quizSession.userDetails.grade);
+                if (quizSession?.questionPaper && userGrade) {
+                    const computed = analyzeResponses(quizSession.questionPaper, userGrade);
                     setReportState({
                         summary: computed.summary,
                         topicFeedback: computed.topicFeedback,
@@ -130,12 +207,20 @@ const QuizResultClient = () => {
             return;
         }
         // Get user key from quizSession (already set correctly in Start Assessment)
-        const userKey = quizSession?.userDetails?.phoneNumber || "";
-        const childId = quizSession?.userDetails?.childId || "default";
+        // For multi-profile, we need the parent key and the child key
+        const userKey = quizSession?.userDetails?.userKey || quizSession?.userDetails?.parentPhone || quizSession?.userDetails?.parentEmail || quizSession?.userDetails?.phoneNumber;
+        // fallback to phoneNumber if parentPhone is missing (legacy single user) uses phoneNumber as key
+
+        const childId = quizSession?.userDetails?.activeChildId || "default";
 
         if (!userKey) return;
 
-        const reportRef = ref(firebaseDatabase, `NMD_2025/Reports/${userKey}/${childId}`);
+        // Correct path: NMD_2025/Reports/{parentKey}/{childId}
+        // If it's a legacy user (no activeChildId), they might be stored at root or default? 
+        // Let's stick to the new structure: Reports/ParentKey/ChildKey
+        const finalParentKey = userKey.replace('.', '_'); // sanitize email if needed, though phone is preferred
+
+        const reportRef = ref(firebaseDatabase, `NMD_2025/Reports/${finalParentKey}/${childId}`);
         set(reportRef, {
             summary,
             generalFeedbackStringified: JSON.stringify({
@@ -164,9 +249,9 @@ const QuizResultClient = () => {
     const learningPlan = parseLearningPlan(learningPlanSummary);
 
     // Determine which student's identity to show in the header.
-    let displayName = quizSession?.userDetails?.name || "";
-    let displayGrade = quizSession?.userDetails?.grade || "";
-    let displayPhone = quizSession?.userDetails?.phoneNumber || "";
+    let displayName = quizSession?.userDetails?.activeChild?.name || quizSession?.userDetails?.name || "";
+    let displayGrade = quizSession?.userDetails?.activeChild?.grade || quizSession?.userDetails?.grade || "";
+    let displayPhone = quizSession?.userDetails?.phoneNumber || quizSession?.userDetails?.parentPhone || "";
 
     if ((!displayName || !displayGrade) && user && userData?.children) {
         // Get user key (works for phone, Google, and email auth)
@@ -393,11 +478,29 @@ const QuizResultClient = () => {
                             <span className={Styles.userName}>{displayName}</span>
                             <span className={Styles.divider}>•</span>
                             <span>{displayGrade}</span>
-                            <span className={Styles.divider}>•</span>
-                            <span>{displayPhone}</span>
                         </div>
                         <h1 className={Styles.mainTitle}>Quiz Results</h1>
                         <p className={Styles.subtitle}>Math Skill Report – Number Series</p>
+                    </div>
+
+                    <div className={Styles.heroStats}>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorCorrect}`}>{summary.correct}</span>
+                            <span className={Styles.heroStatLabel}>Correct</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorWrong}`}>{summary.wrong}</span>
+                            <span className={Styles.heroStatLabel}>Wrong</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorSkipped}`}>{notAttempted}</span>
+                            <span className={Styles.heroStatLabel}>Skipped</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={Styles.heroStatValue}>{summary.totalQuestions}</span>
+                            <span className={Styles.heroStatLabel}>Total</span>
+                        </div>
+                        <HeroChart summary={summary} notAttempted={notAttempted} />
                     </div>
 
                     <div className={Styles.scoreCard}>
@@ -413,60 +516,18 @@ const QuizResultClient = () => {
                                         strokeDasharray: `${(summary.accuracyPercent / 100) * 339.292} 339.292`
                                     }}
                                 />
-                            </svg>
+                            </svg >
                             <div className={Styles.scoreText}>
                                 <div className={Styles.scorePercent}>{summary.accuracyPercent}%</div>
                                 <div className={Styles.scoreLabel}>Accuracy</div>
                             </div>
-                        </div>
-                        <div className={Styles.scoreDetails}>
-                            <div className={Styles.scoreItem}>
-                                <span className={Styles.scoreValue}>{summary.correct}/{summary.totalQuestions}</span>
-                                <span className={Styles.scoreLabel}>Correct Answers</span>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+                        </div >
+
+                    </div >
+                </header >
 
                 {/* Stats Grid */}
-                <section className={Styles.statsSection}>
-                    <div className={Styles.statCard}>
-                        <div className={Styles.statIconWrapper}>
-                            <CheckCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.correct}</div>
-                            <div className={Styles.statLabel}>Correct</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.wrongIcon}`}>
-                            <XCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.wrong}</div>
-                            <div className={Styles.statLabel}>Wrong</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.skippedIcon}`}>
-                            <HelpCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{notAttempted}</div>
-                            <div className={Styles.statLabel}>Not Attempted</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.totalIcon}`}>
-                            <Target className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.totalQuestions}</div>
-                            <div className={Styles.statLabel}>Total Questions</div>
-                        </div>
-                    </div>
-                </section>
+                {/* Stats Section Removed (Moved to Hero) */}
 
                 {/* Action Buttons */}
                 <section className={Styles.actionSection}>
@@ -546,7 +607,6 @@ const QuizResultClient = () => {
                         </MuiLink>
                     </div>
                 </section>
-
             </div>
 
             {/* Topic Feedback Modal */}
@@ -603,10 +663,10 @@ const QuizResultClient = () => {
                         </div>
                     ))}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Success Modal */}
-            <Dialog
+            < Dialog
                 open={tutorSuccessDialogOpen}
                 onClose={() => setTutorSuccessDialogOpen(false)}
                 maxWidth="xs"
@@ -627,10 +687,10 @@ const QuizResultClient = () => {
                 <DialogContent className={Styles.modalContent}>
                     <p className={Styles.tutorSuccessMessage}>{tutorSuccess}</p>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Status Modal */}
-            <Dialog
+            < Dialog
                 open={statusDialogOpen}
                 onClose={() => setStatusDialogOpen(false)}
                 maxWidth="sm"
@@ -670,10 +730,10 @@ const QuizResultClient = () => {
                         </div>
                     )}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Modal */}
-            <Dialog
+            < Dialog
                 open={tutorDialogOpen}
                 onClose={() => !tutorSubmitting && setTutorDialogOpen(false)}
                 maxWidth="sm"
@@ -796,10 +856,10 @@ const QuizResultClient = () => {
                         </div>
                     </form>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Question-wise Performance Modal */}
-            <Dialog
+            < Dialog
                 open={questionModalOpen}
                 onClose={() => setQuestionModalOpen(false)}
                 maxWidth="lg"
@@ -823,26 +883,59 @@ const QuizResultClient = () => {
                             <div key={`${q.questionId || 'q'}-${index}`} className={Styles.questionItem}>
                                 <div className={Styles.questionNumber}>Q{index + 1}</div>
                                 <div className={Styles.questionDetails}>
-                                    <p className={Styles.questionText}>{q.question}</p>
+                                    <div className={Styles.questionText}>
+                                        <MathRenderer content={q.question} />
+                                    </div>
                                     <span className={Styles.topicBadge}>{q.topic}</span>
                                     <div className={Styles.answerSection}>
                                         <div className={Styles.answerRow}>
                                             <span className={Styles.answerLabel}>Correct Answer:</span>
-                                            <span className={Styles.correctAnswer}>{q.correctAnswer}</span>
+                                            <div className={Styles.correctAnswer}>
+                                                <MathRenderer content={formatAnswer(q.correctAnswer)} />
+                                            </div>
                                         </div>
                                         <div className={Styles.answerRow}>
                                             <span className={Styles.answerLabel}>Your Answer:</span>
-                                            <span className={`${Styles.userAnswer} ${q.isCorrect ? Styles.correct : (q.attempted ? Styles.wrong : Styles.skipped)}`}>
-                                                {q.userAnswer || "Not Attempted"}
-                                            </span>
+                                            <div className={`${Styles.userAnswer} ${q.isCorrect ? Styles.correct : (q.attempted ? Styles.wrong : Styles.skipped)}`}>
+                                                {q.userAnswer ? <MathRenderer content={formatAnswer(q.userAnswer)} /> : "Not Attempted"}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div className={Styles.questionStatus}>
-                                    <div className={`${Styles.statusBadge} ${q.isCorrect ? Styles.statusCorrect : (q.attempted ? Styles.statusWrong : Styles.statusSkipped)}`}>
-                                        {q.isCorrect ? <CheckCircle size={16} /> : (q.attempted ? <XCircle size={16} /> : <HelpCircle size={16} />)}
-                                        <span>{q.isCorrect ? "Correct" : (q.attempted ? "Wrong" : "Skipped")}</span>
-                                    </div>
+                                    {(() => {
+                                        // q.score is now available from analyzeResponses
+                                        const score = q.score !== undefined ? q.score : (q.isCorrect ? 1 : 0);
+                                        const isPartial = score > 0 && score < 1;
+                                        const isCorrect = score === 1;
+                                        const isWrong = score === 0 && q.attempted;
+                                        const isSkipped = !q.attempted;
+
+                                        let statusClass = Styles.statusSkipped;
+                                        let Icon = HelpCircle;
+                                        let text = "Not Answered";
+
+                                        if (isCorrect) {
+                                            statusClass = Styles.statusCorrect;
+                                            Icon = CheckCircle;
+                                            text = "Correct";
+                                        } else if (isPartial) {
+                                            statusClass = Styles.statusPartial;
+                                            Icon = AlertCircle;
+                                            text = "Partially Correct";
+                                        } else if (isWrong) {
+                                            statusClass = Styles.statusWrong;
+                                            Icon = XCircle;
+                                            text = "Wrong";
+                                        }
+
+                                        return (
+                                            <div className={`${Styles.statusBadge} ${statusClass}`}>
+                                                <Icon size={16} />
+                                                <span>{text}</span>
+                                            </div>
+                                        );
+                                    })()}
                                     <div className={Styles.timeInfo}>
                                         <Clock size={14} />
                                         <span>{q.timeTaken !== null ? `${q.timeTaken}s` : "N/A"}</span>
@@ -852,10 +945,10 @@ const QuizResultClient = () => {
                         ))}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             <Footer />
-        </div>
+        </div >
     );
 };
 
