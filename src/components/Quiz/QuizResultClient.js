@@ -1,6 +1,43 @@
 "use client";
 import React, { useContext, useEffect, useState } from "react";
 import Styles from "../../app/quiz/quiz-result/QuizResult.module.css";
+import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell } from "recharts";
+
+// ... existing code ...
+
+const HeroChart = ({ summary, notAttempted }) => {
+    const data = [
+        {
+            name: 'Performance',
+            correct: summary.correct,
+            wrong: summary.wrong,
+            skipped: notAttempted,
+        },
+    ];
+
+    return (
+        <div className={Styles.heroChartContainer}>
+            <ResponsiveContainer width="100%" height="100%">
+                <BarChart layout="vertical" data={data} barSize={20}>
+                    <XAxis type="number" hide domain={[0, 'dataMax']} />
+                    <YAxis type="category" dataKey="name" hide />
+                    <RechartsTooltip
+                        cursor={{ fill: 'transparent' }}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    />
+                    <Bar dataKey="correct" stackId="a" fill="#16a34a" radius={[4, 0, 0, 4]} />
+                    <Bar dataKey="wrong" stackId="a" fill="#dc2626" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="skipped" stackId="a" fill="#d97706" radius={[0, 4, 4, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                <span>{summary.correct} Correct</span>
+                <span>{summary.wrong} Wrong</span>
+            </div>
+        </div>
+    );
+};
+
 import Navigation from "@/components/Navigation/Navigation.component";
 import MathRenderer from "@/components/MathRenderer/MathRenderer.component";
 import { CheckCircle, XCircle, HelpCircle, Clock, Target, BookOpen, TrendingUp, BarChart3, FileText, X, AlertCircle } from "lucide-react";
@@ -439,6 +476,26 @@ const QuizResultClient = () => {
                         <p className={Styles.subtitle}>Math Skill Report – Number Series</p>
                     </div>
 
+                    <div className={Styles.heroStats}>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorCorrect}`}>{summary.correct}</span>
+                            <span className={Styles.heroStatLabel}>Correct</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorWrong}`}>{summary.wrong}</span>
+                            <span className={Styles.heroStatLabel}>Wrong</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={`${Styles.heroStatValue} ${Styles.statColorSkipped}`}>{notAttempted}</span>
+                            <span className={Styles.heroStatLabel}>Skipped</span>
+                        </div>
+                        <div className={Styles.heroStatItem}>
+                            <span className={Styles.heroStatValue}>{summary.totalQuestions}</span>
+                            <span className={Styles.heroStatLabel}>Total</span>
+                        </div>
+                        <HeroChart summary={summary} notAttempted={notAttempted} />
+                    </div>
+
                     <div className={Styles.scoreCard}>
                         <div className={Styles.scoreCircle}>
                             <svg viewBox="0 0 120 120" className={Styles.progressRing}>
@@ -452,60 +509,18 @@ const QuizResultClient = () => {
                                         strokeDasharray: `${(summary.accuracyPercent / 100) * 339.292} 339.292`
                                     }}
                                 />
-                            </svg>
+                            </svg >
                             <div className={Styles.scoreText}>
                                 <div className={Styles.scorePercent}>{summary.accuracyPercent}%</div>
                                 <div className={Styles.scoreLabel}>Accuracy</div>
                             </div>
-                        </div>
-                        <div className={Styles.scoreDetails}>
-                            <div className={Styles.scoreItem}>
-                                <span className={Styles.scoreValue}>{summary.correct}/{summary.totalQuestions}</span>
-                                <span className={Styles.scoreLabel}>Correct Answers</span>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+                        </div >
+
+                    </div >
+                </header >
 
                 {/* Stats Grid */}
-                <section className={Styles.statsSection}>
-                    <div className={Styles.statCard}>
-                        <div className={Styles.statIconWrapper}>
-                            <CheckCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.correct}</div>
-                            <div className={Styles.statLabel}>Correct</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.wrongIcon}`}>
-                            <XCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.wrong}</div>
-                            <div className={Styles.statLabel}>Wrong</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.skippedIcon}`}>
-                            <HelpCircle className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{notAttempted}</div>
-                            <div className={Styles.statLabel}>Not Attempted</div>
-                        </div>
-                    </div>
-                    <div className={Styles.statCard}>
-                        <div className={`${Styles.statIconWrapper} ${Styles.totalIcon}`}>
-                            <Target className={Styles.statIcon} />
-                        </div>
-                        <div className={Styles.statContent}>
-                            <div className={Styles.statValue}>{summary.totalQuestions}</div>
-                            <div className={Styles.statLabel}>Total Questions</div>
-                        </div>
-                    </div>
-                </section>
+                {/* Stats Section Removed (Moved to Hero) */}
 
                 {/* Action Buttons */}
                 <section className={Styles.actionSection}>
@@ -585,7 +600,6 @@ const QuizResultClient = () => {
                         </MuiLink>
                     </div>
                 </section>
-
             </div>
 
             {/* Topic Feedback Modal */}
@@ -642,10 +656,10 @@ const QuizResultClient = () => {
                         </div>
                     ))}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Success Modal */}
-            <Dialog
+            < Dialog
                 open={tutorSuccessDialogOpen}
                 onClose={() => setTutorSuccessDialogOpen(false)}
                 maxWidth="xs"
@@ -666,10 +680,10 @@ const QuizResultClient = () => {
                 <DialogContent className={Styles.modalContent}>
                     <p className={Styles.tutorSuccessMessage}>{tutorSuccess}</p>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Status Modal */}
-            <Dialog
+            < Dialog
                 open={statusDialogOpen}
                 onClose={() => setStatusDialogOpen(false)}
                 maxWidth="sm"
@@ -709,10 +723,10 @@ const QuizResultClient = () => {
                         </div>
                     )}
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Tutor Booking Modal */}
-            <Dialog
+            < Dialog
                 open={tutorDialogOpen}
                 onClose={() => !tutorSubmitting && setTutorDialogOpen(false)}
                 maxWidth="sm"
@@ -835,10 +849,10 @@ const QuizResultClient = () => {
                         </div>
                     </form>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             {/* Question-wise Performance Modal */}
-            <Dialog
+            < Dialog
                 open={questionModalOpen}
                 onClose={() => setQuestionModalOpen(false)}
                 maxWidth="lg"
@@ -924,10 +938,10 @@ const QuizResultClient = () => {
                         ))}
                     </div>
                 </DialogContent>
-            </Dialog>
+            </Dialog >
 
             <Footer />
-        </div>
+        </div >
     );
 };
 

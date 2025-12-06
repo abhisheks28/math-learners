@@ -35,26 +35,40 @@ function analyzeResponses(responses, grade) {
         // Partial marking for tableInput
         if (item.type === 'tableInput' && (item.question || item.rows)) {
             // We need to compare row by row.
-            // item.rows contains the structure.
-            // item.answer is the JSON string of ALL correct answers {0:..., 1:...}
-            // item.userAnswer is JSON string of user answers.
-
             try {
                 const correctObj = JSON.parse(correctAnswer);
                 const userObj = JSON.parse(givenAnswer);
 
-                // If item.rows is present, use it for length. If not, use keys of correctObj?
-                // Generators usually attach rows to the question object.
+                // If item.rows is present, use it for length. If not, use keys of correctObj
                 const totalRows = item.rows ? item.rows.length : Object.keys(correctObj).length;
 
                 if (totalRows === 0) return givenAnswer === correctAnswer ? 1 : 0;
 
                 let matchCount = 0;
-                // We can iterate 0 to totalRows-1
                 for (let i = 0; i < totalRows; i++) {
                     const u = userObj[i];
                     const c = correctObj[i];
-                    // Strict equality for JSON objects/strings
+
+                    // Check for fraction comparison
+                    if (u && c && (u.num !== undefined || u.d !== undefined) && (u.den !== undefined || u.d !== undefined) && c.num !== undefined && c.den !== undefined) {
+                        // Normalize key names: tableInput uses 'num'/'den'
+                        // Use parseFloat to handle strings like "4" or "4.0" or even "4.5" if user enters decimals
+                        const uNum = parseFloat(u.num);
+                        const uDen = parseFloat(u.den);
+                        const cNum = parseFloat(c.num);
+                        const cDen = parseFloat(c.den);
+
+                        if (!isNaN(uNum) && !isNaN(uDen) && !isNaN(cNum) && !isNaN(cDen) && uDen !== 0 && cDen !== 0) {
+                            // Cross multiply with epsilon for float safety: |uNum/uDen - cNum/cDen| < epsilon
+                            // => |uNum*cDen - cNum*uDen| < epsilon
+                            if (Math.abs(uNum * cDen - cNum * uDen) < 0.0001) {
+                                matchCount++;
+                                continue;
+                            }
+                        }
+                    }
+
+                    // Strict equality for JSON objects/strings fallback
                     if (JSON.stringify(u) === JSON.stringify(c)) {
                         matchCount++;
                     }
@@ -117,9 +131,6 @@ function analyzeResponses(responses, grade) {
         }
 
         if (attempted) {
-            // Updated topic stats to use scores? 
-            // Existing logic uses counts. Let's use score for consistency.
-            // correctCount becomes 'score obtained', wrongCount becomes 'score lost'
             result.topicFeedback[topic].correctCount += score;
             result.topicFeedback[topic].wrongCount += (1 - score);
         }

@@ -115,38 +115,65 @@ export const generateIntegers = () => {
 // --- CAT03: Fractions ---
 export const generateFractions = () => {
     const rows = [];
-    const d1 = getRandomInt(2, 9);
-    const n1 = getRandomInt(1, d1 * 2);
-    const n2 = getRandomInt(1, d1 * 2);
-    const nAns1 = n1 + n2;
+
+    // Addition with unlike denominators
+    let d1 = getRandomInt(2, 9);
+    let d2 = getRandomInt(2, 9);
+    while (d1 === d2) { d2 = getRandomInt(2, 9); } // Ensure distinct
+    const n1 = getRandomInt(1, 9);
+    const n2 = getRandomInt(1, 9);
+    // Ans = (n1*d2 + n2*d1) / (d1*d2)
+    const ansNum1 = n1 * d2 + n2 * d1;
+    const ansDen1 = d1 * d2;
+
     rows.push({
-        left: { n: n1, d: d1 }, op: '+', right: { n: n2, d: d1 },
-        answer: { num: String(nAns1), den: String(d1) }
+        left: { n: n1, d: d1 }, op: '+', right: { n: n2, d: d2 },
+        answer: { num: String(ansNum1), den: String(ansDen1) }
     });
 
-    const d2 = getRandomInt(2, 9);
-    const n3 = getRandomInt(5, 15);
-    const n4 = getRandomInt(1, 4);
-    const maxN = Math.max(n3, n4);
-    const minN = Math.min(n3, n4);
+    // Subtraction with unlike denominators
+    let d3 = getRandomInt(2, 9);
+    let d4 = getRandomInt(2, 9);
+    while (d3 === d4) { d4 = getRandomInt(2, 9); }
+    let n3 = getRandomInt(1, 9);
+    let n4 = getRandomInt(1, 9);
+
+    // Ensure positive result: n3/d3 >= n4/d4  => n3*d4 >= n4*d3
+    if (n3 * d4 < n4 * d3) {
+        // Swap fractions
+        [n3, n4] = [n4, n3];
+        [d3, d4] = [d4, d3];
+    }
+
+    const ansNum2 = n3 * d4 - n4 * d3;
+    const ansDen2 = d3 * d4;
+
     rows.push({
-        left: { n: maxN, d: d2 }, op: '-', right: { n: minN, d: d2 },
-        answer: { num: String(maxN - minN), den: String(d2) }
+        left: { n: n3, d: d3 }, op: '-', right: { n: n4, d: d4 },
+        answer: { num: String(ansNum2), den: String(ansDen2) }
     });
 
-    const n5 = getRandomInt(1, 4);
-    const d5 = getRandomInt(2, 5);
-    const n6 = getRandomInt(1, 4);
-    const d6 = getRandomInt(2, 5);
+    // Multiplication with unlike denominators (if possible within range)
+    let d5 = getRandomInt(2, 9);
+    let d6 = getRandomInt(2, 9);
+    // Attempt to make them distinct, though not strictly required for logic, user asked for "not same"
+    while (d5 === d6) { d6 = getRandomInt(2, 9); }
+
+    const n5 = getRandomInt(1, d5 - 1); // Proper fraction
+    const n6 = getRandomInt(1, d6 - 1); // Proper fraction
     rows.push({
         left: { n: n5, d: d5 }, op: '×', right: { n: n6, d: d6 },
         answer: { num: String(n5 * n6), den: String(d5 * d6) }
     });
 
-    const n7 = getRandomInt(1, 5);
-    const d7 = getRandomInt(2, 6);
-    const n8 = getRandomInt(1, 5);
-    const d8 = getRandomInt(2, 6);
+    // Division
+    let d7 = getRandomInt(2, 9);
+    let d8 = getRandomInt(2, 9);
+    while (d7 === d8) { d8 = getRandomInt(2, 9); }
+
+    const n7 = getRandomInt(1, 9);
+    const n8 = getRandomInt(1, 9);
+    // n7/d7 ÷ n8/d8 = (n7*d8) / (d7*n8)
     rows.push({
         left: { n: n7, d: d7 }, op: '÷', right: { n: n8, d: d8 },
         answer: { num: String(n7 * d8), den: String(d7 * n8) }
@@ -208,10 +235,7 @@ export const generateLCM = () => {
     const val1 = lcm(a1, b1);
     rows.push({ text: `Find the LCM of $${a1}, ${b1}$`, answer: String(val1) });
 
-    const a2 = getRandomInt(12, 30);
-    const b2 = getRandomInt(12, 30);
-    const val2 = lcm(a2, b2);
-    rows.push({ text: `Find the LCM of $${a2}, ${b2}$`, answer: String(val2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     const a3 = getRandomInt(3, 10);
     const b3 = getRandomInt(3, 10);
@@ -240,10 +264,7 @@ export const generateHCF = () => {
     const val1 = gcd(a1, b1);
     rows.push({ text: `Find the HCF of $${a1}, ${b1}$`, answer: String(val1) });
 
-    const a2 = getRandomInt(20, 60);
-    const b2 = getRandomInt(20, 60);
-    const val2 = gcd(a2, b2);
-    rows.push({ text: `Find the HCF of $${a2}, ${b2}$`, answer: String(val2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     const factor = getRandomInt(2, 6);
     const a3 = factor * getRandomInt(3, 8);
@@ -305,9 +326,7 @@ export const generateSquareRoots = () => {
     const n1 = getRandomInt(11, 30);
     rows.push({ text: `Find the value of $(${n1})^2$`, answer: String(n1 * n1) });
 
-    const n2 = getRandomInt(12, 30);
-    const sq2 = n2 * n2;
-    rows.push({ text: `Find the value of $\\sqrt{${sq2}}$`, answer: String(n2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     const n3 = getRandomInt(31, 50);
     rows.push({ text: `Find the value of $(${n3})^2$`, answer: String(n3 * n3) });
@@ -331,9 +350,7 @@ export const generateCubeRoots = () => {
     const n1 = getRandomInt((-10), (-3)); // Negative cube
     rows.push({ text: `Find the value of $(${n1})^3$`, answer: String(n1 * n1 * n1) });
 
-    const n2 = getRandomInt(4, 12);
-    const cb2 = n2 * n2 * n2;
-    rows.push({ text: `Find the value of $\\sqrt[3]{${cb2}}$`, answer: String(n2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     const n3 = getRandomInt((-8), (-2));
     const cb3 = n3 * n3 * n3;
@@ -421,12 +438,7 @@ export const generateBODMAS = () => {
     rows.push({ text: `Evaluate: $${a1} + ${b1} \\times ${c1}$`, answer: String(ans1) });
 
     // Row 2: Brackets
-    const a2 = getRandomInt(2, 9);
-    const b2 = getRandomInt(2, 9);
-    const c2 = getRandomInt(2, 5);
-    // (a + b) * c
-    const ans2 = (a2 + b2) * c2;
-    rows.push({ text: `Evaluate: $(${a2} + ${b2}) \\times ${c2}$`, answer: String(ans2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     // Row 3: Complex
     // a + b x (c - d)
@@ -550,14 +562,7 @@ export const generateAlgebraicDivision = () => {
 
     // Q2: Quadratic / Quadratic (2 common)
     // (k(ax^2 + bx + c)) / (ax^2 + bx + c)
-    const k2 = getRandomInt(2, 4);
-    const a2 = getRandomInt(2, 5);
-    const b2 = getRandomInt(2, 5); // negative
-    const c2 = getRandomInt(2, 5);
-    // 14x^2 - 20x + 10 / 7x^2 - 10x + 5 (from image, k=2)
-    const num2 = `${k2 * a2}x^2 - ${k2 * b2}x + ${k2 * c2}`;
-    const den2 = `${a2}x^2 - ${b2}x + ${c2}`;
-    rows.push({ text: `Divide: $(${num2}) \\div (${den2})$`, answer: String(k2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     // Q3: Monomial division
     // 63 p^4 m^2 n / 7 p^4 m^2 n = 9
@@ -594,11 +599,7 @@ export const generateLinearEquationOneVar = () => {
     rows.push({ text: `Solve: $${a1}x + ${b1} = ${c1}$`, answer: String(x1) });
 
     // Q2: ax - b = c
-    const x2 = getRandomInt(2, 9);
-    const a2 = getRandomInt(2, 6);
-    const b2 = getRandomInt(5, 20);
-    const c2 = a2 * x2 - b2;
-    rows.push({ text: `Solve: $${a2}x - ${b2} = ${c2}$`, answer: String(x2) });
+    // Q2 removed as per request (keep 1st and 3rd)
 
     // Q3: Slightly harder? 2x = x + k
     // or variables on both sides? Image is simple 4x+48=12.

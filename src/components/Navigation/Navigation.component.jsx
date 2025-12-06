@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Styles from "./Navigation.module.css";
-import { Home, Phone, User } from 'lucide-react'
+import { Play, Phone, User } from 'lucide-react'
 import { Tooltip } from "@mui/material";
 import { useRouter } from "next/navigation";
 import AuthModal from "../Auth/AuthModal.component";
@@ -31,7 +31,7 @@ const Navigation = () => {
     return (
         <>
             <div className={`${Styles.navigationContainer} ${scrolled ? Styles.scrolled : ''}`}>
-                <div className={Styles.logoContainer}>
+                <div className={Styles.logoContainer} onClick={() => router.push("/")}>
                     <div className={Styles.brainWrap} aria-hidden>
                         <img src="/LearnersLogoTransparent.png" className={Styles.brainIcon} />
                     </div>
@@ -41,23 +41,23 @@ const Navigation = () => {
                     </div>
                 </div>
                 <div className={Styles.navActionContainer}>
-                    <Tooltip title="Home" arrow>
-                        <button onClick={() => router.push("/")} className={`${Styles.navButton} ${Styles.outlined}`}>
-                            <Home size={16} />
-                            <span className={Styles.buttonText}>Home</span>
+                    <Tooltip title="Take Test" arrow>
+                        <button onClick={() => router.push("/quiz")} style={{ backgroundColor: "#3c91f3ff", color: "white" }} className={Styles.navButton}>
+                            <Play size={16} />
+                            <span className={Styles.buttonText}>Take Test</span>
                         </button>
                     </Tooltip>
 
                     {user ? (
                         <Tooltip title="View Dashboard" arrow>
-                            <button onClick={() => router.push("/dashboard")} style={{ backgroundColor: "#3c91f3ff", color: "white" }} className={Styles.navButton}>
+                            <button onClick={() => router.push("/dashboard")} className={`${Styles.navButton} ${Styles.outlined}`}>
                                 <User size={16} />
                                 <span className={Styles.buttonText}>Profile</span>
                             </button>
                         </Tooltip>
                     ) : (
                         <Tooltip title="Sign In" arrow>
-                            <button onClick={() => setAuthModalOpen(true)} style={{ backgroundColor: "#3c91f3ff", color: "white" }} className={Styles.navButton}>
+                            <button onClick={() => setAuthModalOpen(true)} className={`${Styles.navButton} ${Styles.outlined}`}>
                                 <User size={16} />
                                 <span className={Styles.buttonText}>Sign In</span>
                             </button>
