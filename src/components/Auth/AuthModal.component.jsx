@@ -589,29 +589,33 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
                     <div className={Styles.stepContainer}>
                         <p className={Styles.stepDescription}>Select who is taking the test</p>
 
-                        <div className={Styles.profileGrid}>
-                            {/* Add New Student Card */}
+                        <div className={Styles.profileList}>
+                            {/* Add New Student Item */}
                             <div
-                                className={`${Styles.profileCard} ${Styles.addProfileCard}`}
+                                className={`${Styles.profileListItem} ${Styles.addProfileItem}`}
                                 onClick={() => setStep("REGISTER")}
                             >
-                                <div className={Styles.addIconCircle}>
-                                    <Plus size={24} />
+                                <div className={Styles.profileListAvatar}>
+                                    <Plus size={18} />
                                 </div>
-                                <div className={Styles.profileName}>Add Student</div>
+                                <div className={Styles.profileListInfo}>
+                                    <div className={Styles.profileListName}>Add Student</div>
+                                </div>
                             </div>
 
                             {Object.entries(userProfiles).map(([key, profile]) => (
                                 <div
                                     key={key}
-                                    className={Styles.profileCard}
+                                    className={Styles.profileListItem}
                                     onClick={() => handleSelectProfile(key, profile)}
                                 >
-                                    <div className={Styles.avatarCircle}>
+                                    <div className={Styles.profileListAvatar}>
                                         {profile.name ? profile.name.charAt(0).toUpperCase() : "U"}
                                     </div>
-                                    <div className={Styles.profileName}>{profile.name}</div>
-                                    <div className={Styles.profileGrade}>{profile.grade}</div>
+                                    <div className={Styles.profileListInfo}>
+                                        <div className={Styles.profileListName}>{profile.name}</div>
+                                        <div className={Styles.profileListGrade}>{profile.grade}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
