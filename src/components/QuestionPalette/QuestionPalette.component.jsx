@@ -27,84 +27,8 @@ const QuestionPalette = ({ questions, activeQuestionIndex, onSelect }) => {
 
             <div className={Styles.gridContainer} ref={gridRef}>
                 {questions.map((q, index) => {
-                    // Validation Logic
-                    const isQuestionAnswered = (question) => {
-                        if (!question.userAnswer) return false;
-                        if (question.type === 'mcq' || question.type === 'userInput' || question.type === 'trueAndFalse') {
-                            // Basic check: non-empty string
-                            return typeof question.userAnswer === 'string' && question.userAnswer.trim() !== "";
-                        }
-                        if (question.type === 'tableInput') {
-                            try {
-                                const ans = typeof question.userAnswer === 'string' ? JSON.parse(question.userAnswer) : question.userAnswer;
-                                const rows = question.rows || [];
-                                // Ensure EVERY row has a valid answer
-                                return rows.every((row, idx) => {
-                                    const rowAns = ans[idx];
-                                    if (!rowAns) return false;
-
-                                    // Check based on variant or inputType
-                                    // If inputType is radio or select, rowAns is value string?
-                                    // Actually TypeTableInput stores {value: ...} for default
-                                    // For fraction: {num: ..., den: ...}
-                                    // For coordinate: {x: ..., y: ...}
-
-                                    const variant = question.variant || 'default';
-
-                                    if (variant === 'fraction') {
-                                        return rowAns.num && rowAns.num.trim() !== "" && rowAns.den && rowAns.den.trim() !== "";
-                                    }
-                                    if (variant === 'coordinate') {
-                                        return rowAns.x && rowAns.x.trim() !== "" && rowAns.y && rowAns.y.trim() !== "";
-                                    }
-                                    // Default (text, radio, select)
-                                    // It stores object {value: "..."} usually, or just value?
-                                    // Looking at TypeTableInput: 
-                                    // handleInputChange(idx, 'value', val) -> answers[idx] = {value: val} (except fraction/coord)
-                                    // So we check rowAns.value
-
-                                    // Wait, TypeTableInput initializes as object. 
-                                    // `newRowAnswer = value` ? No.
-                                    // Line 44: `newRowAnswer = { ...currentAnswer, [field]: value };` (fraction/coord)
-                                    // Line 46: `newRowAnswer = value;` (others? WAIT)
-                                    // Let's re-read TypeTableInput line 46 from previous `view_file` (Step 68).
-                                    // Line 44: if variant fraction/coord: object update.
-                                    // Line 46: else: `newRowAnswer = value;` -> So it's a direct string?
-                                    // But handleInputChange calls: `handleInputChange(idx, 'value', e.target.value)`
-                                    // If it falls to line 46, `value` is the string. So `answers[idx]` becomes string.
-                                    // BUT line 39: `const currentAnswer = answers[idx] || {};` 
-                                    // If answers[idx] is string, currentAnswer is string.
-                                    // If we update strict string, it works.
-
-                                    // HOWEVER, let's look at `handleInputChange` usage in `renderInputCell`:
-                                    // Radio: `onChange={(e) => handleInputChange(idx, 'value', e.target.value)}`
-                                    // Since variant is likely default, it goes to line 46?
-                                    // Line 42: `if (variant === 'fraction' || variant === 'coordinate')`
-                                    // So for default, it executes `newRowAnswer = value`.
-                                    // So `answers[idx]` is the raw value (string).
-
-                                    // Exception: What if it WAS an object previously? 
-                                    // TypeTableInput state `answers` is initialized from `userAnswer` (JSON).
-                                    // If `userAnswer` was `{0: "val"}`, then it works.
-
-                                    // So for default: check if rowAns is non-empty string.
-                                    if (typeof rowAns === 'string') {
-                                        return rowAns.trim() !== "";
-                                    }
-                                    // Fallback if it resembles object with value property (in case of future changes)
-                                    if (rowAns && typeof rowAns === 'object' && rowAns.value) {
-                                        return rowAns.value.trim() !== "";
-                                    }
-                                    return false;
-                                });
-                            } catch (e) {
-                                return false;
-                            }
-                        }
-                        return false;
-                    };
-
-                    const isCompleted = isQuestionAnswered(q);
+                    if (!q) return null;
+                    const isCompleted = q.userAnswer !== null && q.userAnswer !== undefined && q.userAnswer !== "";
                     const isActive = index === activeQuestionIndex;
                     const isMarkedForReview = q.markedForReview || false;
 

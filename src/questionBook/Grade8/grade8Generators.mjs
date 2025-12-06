@@ -54,15 +54,6 @@ export const generateRationalNumbers = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Rational Numbers",
-            answer: answer
-        };
-    }
-
     return {
         type: "mcq",
         question: question,
@@ -73,8 +64,8 @@ export const generateRationalNumbers = () => {
 };
 
 export const generateExponentsGrade8 = () => {
-    const base = getRandomInt(2, 5);
-    const pow = getRandomInt(2, 4);
+    const base = getRandomInt(2, 9);
+    const pow = getRandomInt(2, 5);
 
     const question = `Evaluate: $${base}^{-${pow}}$`;
     const val = Math.pow(base, pow);
@@ -102,15 +93,6 @@ export const generateExponentsGrade8 = () => {
             seen.add(val);
             uniqueOptions.push({ value: val, label: `$\\frac{1}{${r}}$` });
         }
-    }
-
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Exponents & Powers",
-            answer: answer
-        };
     }
 
     return {
@@ -477,15 +459,6 @@ export const generateProportion = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question + " (number only)",
-            topic: "Direct & Inverse Proportion",
-            answer: String(val)
-        };
-    }
-
     return {
         type: "mcq",
         question: question,
@@ -499,25 +472,27 @@ export const generateComparingQuantities = () => {
     const type = ["Percentage", "ProfitLoss", "CI"][getRandomInt(0, 2)];
     let question, answer;
 
+    const round = (num) => Math.round(num * 100) / 100;
+
     if (type === "Percentage") {
         const val = getRandomInt(100, 500);
         const pct = getRandomInt(10, 50);
-        const res = val + (val * pct / 100);
+        const res = round(val + (val * pct / 100));
         question = `Increase $${val}$ by $${pct}\\%$.`;
         answer = String(res);
     } else if (type === "ProfitLoss") {
         const cp = getRandomInt(100, 500);
         const profitPct = getRandomInt(10, 30);
-        const profit = (cp * profitPct) / 100;
-        const sp = cp + profit;
-        question = `Find SP if CP = ₹$${cp}$ and Profit $\\% = ${profitPct}\\%$.`;
+        const profit = round((cp * profitPct) / 100);
+        const sp = round(cp + profit);
+        question = `Find Selling Price if Cost Price = ₹$${cp}$ and Profit $\\% = ${profitPct}\\%$.`;
         answer = `₹${sp}`;
     } else {
         const P = 1000;
         const R = 10;
         const n = 2;
-        const A = P * Math.pow((1 + R / 100), n);
-        question = `Calculate Amount for CI: $P=$ ₹$${P}$, $R=${R}\\%$, $n=${n}$ years.`;
+        const A = round(P * Math.pow((1 + R / 100), n));
+        question = `Calculate Amount for Compound Interest: $P=$ ₹$${P}$, $R=${R}\\%$, $n=${n}$ years.`;
         answer = `₹${A}`;
     }
 
@@ -526,9 +501,9 @@ export const generateComparingQuantities = () => {
 
     const options = shuffleArray([
         { value: answer, label: prefix ? `₹$${val}$` : String(val) },
-        { value: `${prefix}${val + 10}`, label: prefix ? `₹$${val + 10}$` : String(val + 10) },
-        { value: `${prefix}${val - 10}`, label: prefix ? `₹$${val - 10}$` : String(val - 10) },
-        { value: `${prefix}${val * 1.1}`, label: prefix ? `₹$${val * 1.1}$` : String(val * 1.1) }
+        { value: `${prefix}${round(val + 10)}`, label: prefix ? `₹$${round(val + 10)}$` : String(round(val + 10)) },
+        { value: `${prefix}${round(val - 10)}`, label: prefix ? `₹$${round(val - 10)}$` : String(round(val - 10)) },
+        { value: `${prefix}${round(val * 1.1)}`, label: prefix ? `₹$${round(val * 1.1)}$` : String(round(val * 1.1)) }
     ]);
 
     const uniqueOptions = [];
