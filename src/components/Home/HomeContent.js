@@ -121,7 +121,9 @@ const HomeContent = () => {
     const handleAuthSuccess = (data) => {
         const children = data?.children || null;
         const childKeys = children ? Object.keys(children) : [];
-        const activeChildId = childKeys[0] || null;
+
+        // Use the activeChildId from the data if provided, otherwise fall back to first child
+        const activeChildId = data?.activeChildId || childKeys[0] || null;
 
         if (!children || !activeChildId) {
             return;
