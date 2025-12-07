@@ -445,13 +445,25 @@ const DashboardClient = () => {
                                 variant="contained"
                                 className={Styles.startBtn}
                                 onClick={() => {
-                                    if (!user || !activeChild) {
+                                    // Check if we have user data (either from auth or local storage)
+                                    if (!effectiveUserData || !activeChild) {
                                         router.push("/");
                                         return;
                                     }
 
-                                    // Get user key (works for phone, Google, and email auth)
-                                    const userKey = getUserDatabaseKey(user);
+                                    // Get user key - works for both authenticated and phone-only users
+                                    let userKey = null;
+                                    if (user) {
+                                        userKey = getUserDatabaseKey(user);
+                                    }
+                                    if (!userKey && effectiveUserData) {
+                                        userKey = effectiveUserData.userKey || effectiveUserData.phoneNumber || effectiveUserData.parentPhone || effectiveUserData.parentEmail;
+                                    }
+
+                                    if (!userKey) {
+                                        router.push("/");
+                                        return;
+                                    }
 
                                     try {
                                         if (typeof window !== "undefined") {

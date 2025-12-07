@@ -49,6 +49,12 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
         setUserData(finalUserData);
         toast.success(`Welcome ${childProfile.name}!`);
 
+        // Store the selected child in localStorage for consistency
+        const userKey = phoneNumber || (auth.currentUser ? getUserDatabaseKey(auth.currentUser) : null);
+        if (userKey && typeof window !== "undefined") {
+            window.localStorage.setItem(`activeChild_${userKey}`, childId);
+        }
+
         // Initialize Quiz Session
         if (typeof window !== "undefined") {
             window.localStorage.setItem("quizSession", JSON.stringify({
@@ -212,8 +218,12 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
             setUserData(selectedChildData);
             toast.success("Profile created successfully!");
 
-            // Initialize Quiz Session
-            if (typeof window !== "undefined") {
+            // Store the newly created child as active in localStorage
+            const userKey = getUserDatabaseKey(user);
+            if (typeof window !== "undefined" && userKey) {
+                window.localStorage.setItem(`activeChild_${userKey}`, childId);
+
+                // Initialize Quiz Session
                 window.localStorage.setItem("quizSession", JSON.stringify({
                     userDetails: selectedChildData,
                     questionPaper: [],
@@ -419,8 +429,11 @@ const AuthModal = ({ open, onClose, onSuccess }) => {
             setUserData(selectedChildData);
             toast.success("Profile created successfully!");
 
-            // Initialize Quiz Session
+            // Store the newly created child as active in localStorage
             if (typeof window !== "undefined") {
+                window.localStorage.setItem(`activeChild_${phoneNumber}`, childId);
+
+                // Initialize Quiz Session
                 window.localStorage.setItem("quizSession", JSON.stringify({
                     userDetails: selectedChildData,
                     questionPaper: [],
