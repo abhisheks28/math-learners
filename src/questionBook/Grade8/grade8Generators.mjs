@@ -144,20 +144,10 @@ export const generateSquaresCubes = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Squares & Cubes",
-            answer: answer
-        };
-    }
-
     return {
-        type: "mcq",
+        type: "userInput",
         question: question,
         topic: "Squares & Cubes",
-        options: uniqueOptions,
         answer: answer
     };
 };
@@ -296,20 +286,10 @@ export const generateLinearEquationsGrade8 = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question,
-            topic: "Linear Equations",
-            answer: answer
-        };
-    }
-
     return {
-        type: "mcq",
+        type: "userInput",
         question: question,
         topic: "Linear Equations",
-        options: uniqueOptions,
         answer: answer
     };
 };
@@ -361,21 +341,11 @@ export const generateMensuration = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question + " (number only)",
-            topic: "Mensuration",
-            answer: String(val)
-        };
-    }
-
     return {
-        type: "mcq",
-        question: question,
+        type: "userInput",
+        question: question + " (number only)",
         topic: "Mensuration",
-        options: uniqueOptions,
-        answer: answer
+        answer: String(val)
     };
 };
 
@@ -460,11 +430,10 @@ export const generateProportion = () => {
     }
 
     return {
-        type: "mcq",
-        question: question,
+        type: "userInput",
+        question: question + (type === "Direct" ? " (number only, without ₹)" : " (number only, without days)"),
         topic: "Direct & Inverse Proportion",
-        options: uniqueOptions,
-        answer: answer
+        answer: String(val)
     };
 };
 
@@ -523,20 +492,10 @@ export const generateComparingQuantities = () => {
         }
     }
 
-    if (Math.random() > 0.5) {
-        return {
-            type: "userInput",
-            question: question + (type !== "Percentage" ? " (number only)" : ""),
-            topic: "Comparing Quantities",
-            answer: type !== "Percentage" ? String(val) : answer
-        };
-    }
-
     return {
-        type: "mcq",
-        question: question,
+        type: "userInput",
+        question: question + (type !== "Percentage" ? " (number only)" : ""),
         topic: "Comparing Quantities",
-        options: uniqueOptions,
-        answer: answer
+        answer: type !== "Percentage" ? String(val) : answer
     };
 };
