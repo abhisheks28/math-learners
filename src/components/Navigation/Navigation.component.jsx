@@ -71,7 +71,10 @@ const Navigation = () => {
                     <Tooltip title="Take Test" arrow>
                         <button
                             onClick={async () => {
-                                if (user) {
+                                // Check if we have any user data (Firebase auth OR local session)
+                                const effectiveUserData = userData || (typeof window !== "undefined" ? JSON.parse(window.localStorage.getItem("quizSession") || "{}")?.userDetails : null);
+
+                                if (user || effectiveUserData || hasSession) {
                                     // Logic to correctly initialize session for the active child
                                     try {
                                         // Robust user key retrieval
@@ -79,20 +82,25 @@ const Navigation = () => {
                                         if (user) {
                                             userKey = getUserDatabaseKey(user);
                                         }
-                                        if (!userKey && userData) {
-                                            userKey = userData.userKey || userData.phoneNumber || userData.parentPhone || userData.parentEmail;
+                                        if (!userKey && effectiveUserData) {
+                                            userKey = effectiveUserData.userKey || effectiveUserData.phoneNumber || effectiveUserData.parentPhone || effectiveUserData.parentEmail;
                                         }
 
                                         if (!userKey) {
                                             console.warn("Navigation: No userKey found, cannot start test correctly.");
+                                            // If no userKey but has session, just navigate
+                                            router.push("/quiz");
+                                            return;
                                         }
 
-                                        const children = userData?.children || null;
+                                        const children = effectiveUserData?.children || null;
                                         const childKeys = children ? Object.keys(children) : [];
-                                        let activeChildId = childKeys[0] || null;
+
+                                        // CRITICAL: Get active child from localStorage FIRST, then fallback to first child
+                                        let activeChildId = null;
 
                                         // Prefer stored active child
-                                        if (typeof window !== "undefined") {
+                                        if (typeof window !== "undefined" && userKey) {
                                             const storedChildId = window.localStorage.getItem(`activeChild_${userKey}`);
                                             const lastActiveChild = window.localStorage.getItem('lastActiveChild'); // Fallback
 
@@ -102,6 +110,11 @@ const Navigation = () => {
                                             } else if (lastActiveChild && childKeys.includes(lastActiveChild)) {
                                                 activeChildId = lastActiveChild;
                                             }
+                                        }
+
+                                        // Only use first child as last resort
+                                        if (!activeChildId && childKeys.length > 0) {
+                                            activeChildId = childKeys[0];
                                         }
 
                                         if (children && activeChildId) {
@@ -141,8 +154,6 @@ const Navigation = () => {
                                     } catch (e) {
                                         console.error("Navigation start test error:", e);
                                     }
-                                    router.push("/quiz");
-                                } else if (hasSession) {
                                     router.push("/quiz");
                                 } else {
                                     setAuthModalOpen(true);
