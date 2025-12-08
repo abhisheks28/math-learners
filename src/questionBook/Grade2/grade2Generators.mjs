@@ -70,27 +70,48 @@ export const generateValue = () => {
   let hundreds = getRandomInt(1, 9);
   let tens = getRandomInt(0, 9);
   let ones = getRandomInt(0, 9);
-  const values = [hundreds, tens, ones];
-  const answer = values[Math.floor(Math.random() * 3)];
 
-  // Ensure digits are distinct to avoid duplicate options
+  // Ensure unique digits to avoid ambiguity for "Value of X in XYZ"
   while (tens === hundreds) tens = getRandomInt(0, 9);
   while (ones === hundreds || ones === tens) ones = getRandomInt(0, 9);
 
   const number = hundreds * 100 + tens * 10 + ones;
+  const positions = ['ones', 'tens', 'hundreds'];
+  const targetPos = positions[getRandomInt(0, 2)];
 
-  const options = shuffleArray([
-    // { value: `${answer}000`, label: `${answer}000` },
-    { value: `${answer}0`, label: `${answer}0` },
-    { value: `${answer}`, label: `${answer}` },
-    { value: `${answer}00`, label: `${answer}00` }
-  ]);
+  let targetDigit, answer;
+
+  if (targetPos === 'ones') {
+    targetDigit = ones;
+    answer = String(ones);
+  } else if (targetPos === 'tens') {
+    targetDigit = tens;
+    answer = String(tens * 10);
+  } else {
+    targetDigit = hundreds;
+    answer = String(hundreds * 100);
+  }
+
+  const question = `What is the place value of ${targetDigit} in ${number}?`;
+
+  // Distractors
+  const distractors = new Set();
+  distractors.add(answer);
+  distractors.add(String(targetDigit)); // Face value
+  distractors.add(String(targetDigit * 10));
+  distractors.add(String(targetDigit * 100));
+  distractors.add(String(getRandomInt(10, 900))); // Random fallback
+
+  const options = Array.from(distractors)
+    .filter(val => val !== undefined)
+    .slice(0, 4)
+    .map(val => ({ value: val, label: val }));
 
   return {
     type: "mcq",
-    question: `What is the value of ${answer} in ${number}?`,
-    topic: "Number Sense / Place Value",
-    options: options,
+    question: question,
+    topic: "Number Sense / Value",
+    options: shuffleArray(options),
     answer: answer
   };
 };
