@@ -473,7 +473,7 @@ const QuizResultClient = () => {
                             <span>{displayGrade}</span>
                         </div>
                         <h1 className={Styles.mainTitle}>Quiz Results</h1>
-                        <p className={Styles.subtitle}>Math Skill Report – Number Series</p>
+                        <p className={Styles.subtitle}>Math Skill Report - Powered by Learners</p>
                     </div>
 
                     <div className={Styles.heroStats}>
@@ -560,7 +560,7 @@ const QuizResultClient = () => {
                 <section className={Styles.learningSection}>
                     <div className={Styles.sectionHeader}>
                         <BookOpen className={Styles.sectionIcon} />
-                        <h2 className={Styles.sectionTitle}>Your Learning Plan</h2>
+                        <h2 className={Styles.sectionTitle}>Your Personalized Learning Plan</h2>
                     </div>
                     <div className={Styles.learningCard}>
                         <p className={Styles.learningIntro}>{learningPlan.intro}</p>
