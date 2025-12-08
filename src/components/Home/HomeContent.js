@@ -4,7 +4,7 @@ import Styles from "../../app/page.module.css";
 import { Button, CircularProgress } from "@mui/material";
 import { Award, Clock, Contact, ArrowRight, Target } from "lucide-react";
 import dynamic from "next/dynamic";
-const LandingIllustration = dynamic(() => import("@/components/LottieAnimations/Landing/Landing.component"), { ssr: false });
+// const LandingIllustration = dynamic(() => import("@/components/LottieAnimations/Landing/Landing.component"), { ssr: false });
 import SampleDashboard from "@/components/SampleDashboard/SampleDashboard.component";
 import Footer from "@/components/Footer/Footer.component";
 import { useRouter } from "next/navigation";
@@ -151,7 +151,7 @@ const HomeContent = () => {
                     </div>
                     <h1>Math Skills Proficiency Test</h1>
                     <p className={Styles.subtitle}>Discover Your Math Mastery Level</p>
-                    <div className={Styles.badgesContainer}>
+                    {/* <div className={Styles.badgesContainer}>
                         <div className={Styles.badge}>
                             <Target className={Styles.badgeIcon} />
                             <span>Assess</span>
@@ -164,7 +164,7 @@ const HomeContent = () => {
                             <Clock className={Styles.badgeIcon} />
                             <span>Celebrate Math Skills</span>
                         </div>
-                    </div>
+                    </div> */}
 
                     <div style={{ marginTop: '32px' }}>
                         <Button
@@ -188,7 +188,7 @@ const HomeContent = () => {
                         </Button>
                     </div>
 
-                    <div className={Styles.featuresContainer}>
+                    {/* <div className={Styles.featuresContainer}>
                         <div className={Styles.featureItem}>
                             <Clock />
                             <p>30 Minutes</p>
@@ -203,10 +203,15 @@ const HomeContent = () => {
                             <Award />
                             <p>Instant Result</p>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
                 <div className={Styles.illustrationContainer}>
-                    <LandingIllustration />
+                    {/* <LandingIllustration /> */}
+                    <img
+                        src="/HeroIllustration.gif"
+                        alt="Landing Illustration"
+                        style={{ width: '90%', height: 'auto' }}
+                    />
                 </div>
             </div>
 
